@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+customer_support.db
+.pytest_cache/
+.idea/
+.vscode/
