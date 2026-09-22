@@ -8,3 +8,4 @@ customer_support.db
 .vscode/
 app/database/seed.py
 tests/test_database.py
+tests/test_tools.py
