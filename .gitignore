@@ -6,3 +6,5 @@ customer_support.db
 .pytest_cache/
 .idea/
 .vscode/
+.app/database/seed/
+.tests/test_database/
