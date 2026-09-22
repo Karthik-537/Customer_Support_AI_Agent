@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Build basic agent">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/agent/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/prompts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/embeddings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/embeddings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/retriever.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/retriever.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +151,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790088103503</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Build basic agent">
+      <option name="closed" value="true" />
+      <created>1790097786298</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1790097786298</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -157,6 +168,7 @@
     <MESSAGE value="Project Structure" />
     <MESSAGE value="Database creation" />
     <MESSAGE value="Tools creation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Tools creation" />
+    <MESSAGE value="Build basic agent" />
+    <option name="LAST_COMMIT_MESSAGE" value="Build basic agent" />
   </component>
 </project>

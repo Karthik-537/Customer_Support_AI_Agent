@@ -1,1 +1,1 @@
-"""RAG package: document loading, embeddings, and retrieval."""
+"""RAG (Retrieval-Augmented Generation) package."""
