@@ -1,0 +1,64 @@
+"""Tool registry for mapping tool names to Python functions.
+
+This module provides a secure mapping between tool names and their
+corresponding Python functions, preventing arbitrary code execution.
+"""
+
+from typing import Any, Callable, Dict, Optional
+
+from app.tools.escalation import escalate_to_human
+from app.tools.inventory_tools import check_inventory
+from app.tools.order_tools import cancel_order, get_order_status
+from app.tools.ticket_tools import create_support_ticket, get_ticket_status
+
+
+# Tool registry mapping tool names to their Python functions
+TOOL_REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {
+    "get_order_status": get_order_status,
+    "cancel_order": cancel_order,
+    "check_inventory": check_inventory,
+    "create_support_ticket": create_support_ticket,
+    "get_ticket_status": get_ticket_status,
+    "escalate_to_human": escalate_to_human,
+}
+
+
+def get_tool_function(tool_name: str) -> Optional[Callable[..., Dict[str, Any]]]:
+    """Get a tool function by name.
+
+    Args:
+        tool_name: The name of the tool to retrieve.
+
+    Returns:
+        The tool function if found, None otherwise.
+    """
+    return TOOL_REGISTRY.get(tool_name)
+
+
+def execute_tool(tool_name: str, **kwargs: Any) -> Dict[str, Any]:
+    """Execute a tool by name with the given arguments.
+
+    Args:
+        tool_name: The name of the tool to execute.
+        **kwargs: Arguments to pass to the tool function.
+
+    Returns:
+        The result dictionary from the tool function.
+
+    Raises:
+        ValueError: If the tool name is not found in the registry.
+    """
+    tool_func = get_tool_function(tool_name)
+    if tool_func is None:
+        raise ValueError(f"Tool '{tool_name}' not found in registry")
+
+    return tool_func(**kwargs)
+
+
+def get_available_tools() -> list[str]:
+    """Get a list of all available tool names.
+
+    Returns:
+        List of tool names that can be executed.
+    """
+    return list(TOOL_REGISTRY.keys())
