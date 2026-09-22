@@ -1,11 +1,41 @@
 """SQLAlchemy ORM models for customers, orders, inventory, and tickets."""
 
 from datetime import datetime, timezone
+from enum import Enum
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import CheckConstraint, Column, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database.db import Base
+
+
+class OrderStatus(str, Enum):
+    """Allowed values for orders.status."""
+
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    SHIPPED = "SHIPPED"
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
+
+
+class TicketPriority(str, Enum):
+    """Allowed values for support_tickets.priority."""
+
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class TicketStatus(str, Enum):
+    """Allowed values for support_tickets.status."""
+
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED = "RESOLVED"
+    ESCALATED = "ESCALATED"
+    CLOSED = "CLOSED"
 
 
 def utc_now() -> datetime:
@@ -35,18 +65,8 @@ class Order(Base):
 
     __tablename__ = "orders"
 
-    STATUS_PENDING = "PENDING"
-    STATUS_CONFIRMED = "CONFIRMED"
-    STATUS_SHIPPED = "SHIPPED"
-    STATUS_DELIVERED = "DELIVERED"
-    STATUS_CANCELLED = "CANCELLED"
-
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_orders_quantity_positive"),
-        CheckConstraint(
-            "status IN ('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED')",
-            name="ck_orders_status",
-        ),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -54,7 +74,7 @@ class Order(Base):
     product_id = Column(String, nullable=False)
     product_name = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column(SqlEnum(OrderStatus, native_enum=False), nullable=False)
     order_date = Column(DateTime, nullable=False, default=utc_now)
     delivery_date = Column(DateTime, nullable=True)
 
@@ -92,33 +112,11 @@ class SupportTicket(Base):
 
     __tablename__ = "support_tickets"
 
-    PRIORITY_LOW = "LOW"
-    PRIORITY_MEDIUM = "MEDIUM"
-    PRIORITY_HIGH = "HIGH"
-    PRIORITY_CRITICAL = "CRITICAL"
-
-    STATUS_OPEN = "OPEN"
-    STATUS_IN_PROGRESS = "IN_PROGRESS"
-    STATUS_RESOLVED = "RESOLVED"
-    STATUS_ESCALATED = "ESCALATED"
-    STATUS_CLOSED = "CLOSED"
-
-    __table_args__ = (
-        CheckConstraint(
-            "priority IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')",
-            name="ck_tickets_priority",
-        ),
-        CheckConstraint(
-            "status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'ESCALATED', 'CLOSED')",
-            name="ck_tickets_status",
-        ),
-    )
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     issue = Column(Text, nullable=False)
-    priority = Column(String, nullable=False)
-    status = Column(String, nullable=False)
+    priority = Column(SqlEnum(TicketPriority, native_enum=False), nullable=False)
+    status = Column(SqlEnum(TicketStatus, native_enum=False), nullable=False)
     created_at = Column(DateTime, nullable=False, default=utc_now)
     updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
 

@@ -4,11 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Project Structure">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Database creation">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/db.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/seed.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_database.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,10 +30,11 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Python.db.executor": "Run"
+    "Python.db.executor": "Run",
+    "Python.seed.executor": "Run"
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.seed">
     <configuration name="db" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Customer_Support_AI_Agent" />
       <option name="ENV_FILES" value="" />
@@ -55,8 +57,31 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="seed" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Customer_Support_AI_Agent" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/database" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/database/seed.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.seed" />
         <item itemvalue="Python.db" />
       </list>
     </recent_temporary>
@@ -101,13 +126,22 @@
       <option name="project" value="LOCAL" />
       <updated>1790070925483</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Database creation">
+      <option name="closed" value="true" />
+      <created>1790074544600</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1790074544600</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="ff" />
     <MESSAGE value="first commit" />
     <MESSAGE value="Project Structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="Project Structure" />
+    <MESSAGE value="Database creation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Database creation" />
   </component>
 </project>
