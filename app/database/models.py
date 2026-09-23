@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for customers, orders, inventory, and tickets."""
+"""SQLAlchemy ORM models for customers, orders, inventory, tickets, and conversations."""
 
 from datetime import datetime, timezone
 from enum import Enum
@@ -55,6 +55,7 @@ class Customer(Base):
 
     orders = relationship("Order", back_populates="customer")
     tickets = relationship("SupportTicket", back_populates="customer")
+    conversations = relationship("Conversation", back_populates="customer")
 
     def __repr__(self) -> str:
         return f"<Customer id={self.id} email={self.email!r}>"
@@ -124,3 +125,39 @@ class SupportTicket(Base):
 
     def __repr__(self) -> str:
         return f"<SupportTicket id={self.id} status={self.status!r}>"
+
+
+class Conversation(Base):
+    """A conversation between a user and the AI agent."""
+
+    __tablename__  = "conversations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(String, nullable=False, unique=True, index=True)
+    user_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    title = Column(String, nullable=True, default="New Conversation")
+    created_at = Column(DateTime, nullable=False, default=utc_now)
+    updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
+
+    customer = relationship("Customer", back_populates="conversations")
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<Conversation id={self.id} conversation_id={self.conversation_id!r}>"
+
+
+class Message(Base):
+    """A message within a conversation."""
+
+    __tablename__  = "messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(String, ForeignKey("conversations.conversation_id"), nullable=False, index=True)
+    role = Column(String, nullable=False)  # "user" or "assistant"
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=utc_now)
+
+    conversation = relationship("Conversation", back_populates="messages")
+
+    def __repr__(self) -> str:
+        return f"<Message id={self.id} role={self.role!r} conversation_id={self.conversation_id!r}>"

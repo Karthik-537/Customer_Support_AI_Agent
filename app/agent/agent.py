@@ -11,6 +11,10 @@ from app.agent.prompts import get_system_prompt
 from app.agent.rag_interface import format_rag_context
 from app.agent.tool_registry import execute_tool
 from app.agent.tool_schemas import get_tool_schemas
+from app.memory.context_builder import build_context
+from app.memory.conversation_memory import add_message, get_or_create_conversation
+from app.memory.memory_extractor import extract_memory_candidates
+from app.memory.memory_processor import process_memory_candidates
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,23 +35,49 @@ class CustomerSupportAgent:
         logger.info("Initialized CustomerSupportAgent")
 
     def process_message(
-        self, user_message: str, conversation_history: Optional[List[Dict[str, str]]] = None
+        self,
+        user_message: str,
+        user_id: int,
+        conversation_id: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Dict[str, Any]:
-        """Process a user message through the agent.
+        """Process a user message through the agent with memory support.
 
         Args:
             user_message: The user's message.
-            conversation_history: Optional list of previous conversation messages.
+            user_id: The user ID.
+            conversation_id: Optional conversation ID. If not provided, a new one is created.
+            conversation_history: Optional list of previous conversation messages (deprecated, use conversation_id).
 
         Returns:
             Dictionary containing the agent's response and metadata.
         """
         logger.info(f"Processing user message: {user_message[:100]}...")
 
-        # Build message history
-        messages = self._build_messages(user_message, conversation_history)
+        # Step 1: Get or create conversation
+        conv_result = get_or_create_conversation(user_id, conversation_id)
+        if not conv_result.get("success"):
+            logger.error(f"Failed to get/create conversation: {conv_result.get('error')}")
+            return {
+                "success": False,
+                "error": conv_result.get("error"),
+                "response": "I'm sorry, I'm having trouble with conversation tracking. Please try again."
+            }
 
-        # Agent loop: handle tool calls until final response
+        active_conversation_id = conv_result["conversation_id"]
+
+        # Step 2: Build context with long-term and short-term memory
+        context = build_context(
+            system_prompt=self.system_prompt,
+            user_id=user_id,
+            conversation_id=active_conversation_id,
+            user_message=user_message,
+            include_long_term_memory=True
+        )
+
+        messages = context["messages"]
+
+        # Step 3: Agent loop: handle tool calls until final response
         max_iterations = 10  # Prevent infinite loops
         iteration = 0
 
@@ -84,11 +114,30 @@ class CustomerSupportAgent:
                 # No tool calls, this is the final response
                 logger.info("No tool calls requested, returning final response")
                 content = assistant_message.get("content", "")
+
+                # Step 4: Store conversation messages
+                add_message(active_conversation_id, "user", user_message)
+                add_message(active_conversation_id, "assistant", content)
+
+                # Step 5: Extract and process long-term memory (non-blocking)
+                try:
+                    candidates = extract_memory_candidates(user_message)
+                    if candidates:
+                        process_memory_candidates(
+                            user_id=user_id,
+                            candidates=candidates,
+                            source_conversation_id=active_conversation_id
+                        )
+                except Exception as e:
+                    logger.warning(f"Memory extraction failed (non-blocking): {e}")
+
                 return {
                     "success": True,
                     "response": content,
                     "tool_calls": [],
-                    "iterations": iteration
+                    "iterations": iteration,
+                    "conversation_id": active_conversation_id,
+                    "long_term_memories_used": len(context.get("long_term_memories", []))
                 }
 
             # Add assistant message with tool calls to conversation
@@ -151,38 +200,6 @@ class CustomerSupportAgent:
             "error": "Max iterations reached",
             "response": "I'm sorry, I'm having trouble processing your request. Please try again."
         }
-
-    def _build_messages(
-        self, user_message: str, conversation_history: Optional[List[Dict[str, str]]] = None
-    ) -> List[Dict[str, str]]:
-        """Build the message list for the LLM.
-
-        Args:
-            user_message: The current user message.
-            conversation_history: Optional previous conversation history.
-
-        Returns:
-            List of message dictionaries.
-        """
-        messages = []
-
-        # Add system prompt
-        messages.append({
-            "role": "system",
-            "content": self.system_prompt
-        })
-
-        # Add conversation history if provided
-        if conversation_history:
-            messages.extend(conversation_history)
-
-        # Add current user message
-        messages.append({
-            "role": "user",
-            "content": user_message
-        })
-
-        return messages
 
 
 def get_agent() -> CustomerSupportAgent:
