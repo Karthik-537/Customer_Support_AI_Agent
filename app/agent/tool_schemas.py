@@ -128,5 +128,22 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                     "required": ["customer_id", "reason"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "retrieve_company_knowledge",
+                "description": "Retrieve company policy information from the knowledge base. Use this for questions about refund policies, shipping policies, cancellation policies, warranty, FAQs, and other documented company rules.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The search query to find relevant company policy information"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
         }
     ]

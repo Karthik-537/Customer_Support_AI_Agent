@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from app.agent.llm import OllamaClient, get_ollama_client
 from app.agent.prompts import get_system_prompt
+from app.agent.rag_interface import format_rag_context
 from app.agent.tool_registry import execute_tool
 from app.agent.tool_schemas import get_tool_schemas
 
@@ -111,10 +112,18 @@ class CustomerSupportAgent:
                     tool_result = execute_tool(tool_name, **tool_args)
                     logger.info(f"Tool result: {tool_result}")
 
+                    # Special handling for RAG results
+                    if tool_name == "retrieve_company_knowledge" and tool_result.get("success"):
+                        # Format RAG results as context for the LLM
+                        rag_context = format_rag_context(tool_result.get("results", []))
+                        tool_content = f"COMPANY KNOWLEDGE:\n\n{rag_context}"
+                    else:
+                        tool_content = str(tool_result)
+
                     # Add tool result to messages
                     messages.append({
                         "role": "tool",
-                        "content": str(tool_result),
+                        "content": tool_content,
                         "tool_call_id": tool_call.get("id", "")
                     })
 

@@ -6,6 +6,7 @@ corresponding Python functions, preventing arbitrary code execution.
 
 from typing import Any, Callable, Dict, Optional
 
+from app.agent.rag_interface import retrieve_company_knowledge
 from app.tools.escalation import escalate_to_human
 from app.tools.inventory_tools import check_inventory
 from app.tools.order_tools import cancel_order, get_order_status
@@ -20,6 +21,7 @@ TOOL_REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {
     "create_support_ticket": create_support_ticket,
     "get_ticket_status": get_ticket_status,
     "escalate_to_human": escalate_to_human,
+    "retrieve_company_knowledge": retrieve_company_knowledge,
 }
 
 
