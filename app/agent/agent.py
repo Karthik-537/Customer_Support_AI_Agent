@@ -53,7 +53,6 @@ class CustomerSupportAgent:
             Dictionary containing the agent's response and metadata.
         """
         logger.info(f"Processing user message: {user_message[:100]}...")
-
         # Step 1: Get or create conversation
         conv_result = get_or_create_conversation(user_id, conversation_id)
         if not conv_result.get("success"):
