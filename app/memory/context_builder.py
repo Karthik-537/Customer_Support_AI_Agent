@@ -47,29 +47,21 @@ def build_context(
         if memory_result.get("success"):
             long_term_memories = memory_result.get("memories", [])
 
-            if long_term_memories:
-                memory_context = "\n\nUSER PREFERENCES AND CONTEXT:\n"
-                for memory in long_term_memories:
-                    memory_context += f"- {memory.get('content')}\n"
-                messages.append({"role": "system", "content": memory_context})
-                logger.info(f"Included {len(long_term_memories)} long-term memories")
-
-    # Recent conversation messages
-    recent_messages = get_recent_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
-
-
-    # Add long-term memory context if available
     if long_term_memories:
         memory_context = "USER PREFERENCES AND CONTEXT:\n"
         for memory in long_term_memories:
             memory_context += f"- {memory.get('content')}\n"
         messages.append({"role": "system", "content": memory_context})
+        logger.info(f"Included {len(long_term_memories)} long-term memories")
+
+    # Recent conversation messages
+    recent_messages = get_recent_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
 
     # Add conversation history
     for msg in recent_messages:
         messages.append({
-            "role": msg.get("role",""),
-            "content": msg.get("content","")
+            "role": msg.get("role", ""),
+            "content": msg.get("content", "")
         })
 
     # Add current user message

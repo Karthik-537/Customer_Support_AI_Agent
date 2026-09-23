@@ -326,7 +326,7 @@ def delete_conversation(conversation_id: str) -> Dict[str, Any]:
     Returns:
         Dictionary indicating success/failure.
     """
-    db: SessionLocal()
+    db: Session = SessionLocal()
     try:
         # Delete conversation (messages will cascade delete)
         db.query(Conversation).filter(

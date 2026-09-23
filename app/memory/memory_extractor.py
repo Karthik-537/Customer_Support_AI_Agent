@@ -90,11 +90,10 @@ def extract_memory_candidates(user_message: str) -> List[Dict[str, Any]]:
         client = OllamaClient()
         response = client.generate_response(messages, tools=None)
 
-        if not response.get("success"):
-            logger.warning(f"Memory extraction failed: {response.get('error')}")
+        content = response.get("message", {}).get("content", "")
+        if not content:
+            logger.warning("Memory extraction returned no content")
             return []
-
-        content = response.get("content", "").strip()
 
         # Parse JSON response
         try:

@@ -7,11 +7,13 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Avoiding repeated actions">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Removed workflow state">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/prompts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/workflow_state.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/workflow_state.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/context_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/context_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/conversation_memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/conversation_memory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/memory_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/memory_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -289,7 +291,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790177111150</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Removed workflow state">
+      <option name="closed" value="true" />
+      <created>1790180907052</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1790180907052</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -308,6 +318,7 @@
     <MESSAGE value="Path Change" />
     <MESSAGE value="Minor Change" />
     <MESSAGE value="Avoiding repeated actions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Avoiding repeated actions" />
+    <MESSAGE value="Removed workflow state" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed workflow state" />
   </component>
 </project>

@@ -136,7 +136,7 @@ def process_memory_candidates(
     skipped_count = 0
 
     from app.rag.qdrant_store import create_collection, get_collection_info
-    from long_term_memory import MEMORY_COLLECTION
+    from app.memory.long_term_memory import MEMORY_COLLECTION
 
     collection_info = get_collection_info(MEMORY_COLLECTION)
     if not collection_info:
