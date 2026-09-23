@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration
-KNOWLEDGE_BASE_DIR = Path("data/knowledge_base")
+KNOWLEDGE_BASE_DIR = project_root / "data" / "knowledge_base"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
