@@ -135,6 +135,20 @@ def process_memory_candidates(
     updated_count = 0
     skipped_count = 0
 
+    from app.rag.qdrant_store import create_collection, get_collection_info
+    from long_term_memory import MEMORY_COLLECTION
+
+    collection_info = get_collection_info(MEMORY_COLLECTION)
+    if not collection_info:
+        from app.rag.ingest import EMBEDDING_MODEL
+        from app.rag.embeddings import get_embedding_dimension
+
+        embedding_dim = get_embedding_dimension(EMBEDDING_MODEL)
+        create_collection(
+            collection_name=MEMORY_COLLECTION,
+            vector_size=embedding_dim,
+            recreate=False
+        )
     for candidate in filtered:
         result = process_memory_candidate(user_id, candidate, source_conversation_id)
         results.append(result)

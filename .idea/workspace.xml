@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Added memory to agent">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -172,7 +170,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790136465768</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Added memory to agent">
+      <option name="closed" value="true" />
+      <created>1790155542192</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1790155542192</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -184,6 +190,7 @@
     <MESSAGE value="Build basic agent" />
     <MESSAGE value="Rag implementation" />
     <MESSAGE value="Rag integration" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rag integration" />
+    <MESSAGE value="Added memory to agent" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added memory to agent" />
   </component>
 </project>
