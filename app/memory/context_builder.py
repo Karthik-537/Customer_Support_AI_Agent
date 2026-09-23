@@ -5,7 +5,7 @@ recent conversation messages, and the current user message.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from app.memory.conversation_memory import get_recent_messages
 from app.memory.long_term_memory import search_memories, LONG_TERM_MEMORY_TOP_K
@@ -36,12 +36,11 @@ def build_context(
     Returns:
         Dictionary containing the built context.
     """
-    context_parts = []
 
-    # 1. System instructions
-    context_parts.append(system_prompt)
+    messages = [
+        {"role": "system", "content": system_prompt}
+    ]
 
-    # 2. Long-term memories (if enabled)
     long_term_memories = []
     if include_long_term_memory:
         memory_result = search_memories(user_id, user_message, top_k=LONG_TERM_MEMORY_TOP_K)
@@ -52,16 +51,12 @@ def build_context(
                 memory_context = "\n\nUSER PREFERENCES AND CONTEXT:\n"
                 for memory in long_term_memories:
                     memory_context += f"- {memory.get('content')}\n"
-                context_parts.append(memory_context)
+                messages.append({"role": "system", "content": memory_context})
                 logger.info(f"Included {len(long_term_memories)} long-term memories")
 
-    # 3. Recent conversation messages
+    # Recent conversation messages
     recent_messages = get_recent_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
 
-    # 4. Build messages list for LLM
-    messages = [
-        {"role": "system", "content": system_prompt}
-    ]
 
     # Add long-term memory context if available
     if long_term_memories:
@@ -73,8 +68,8 @@ def build_context(
     # Add conversation history
     for msg in recent_messages:
         messages.append({
-            "role": msg.get("role"),
-            "content": msg.get("content")
+            "role": msg.get("role",""),
+            "content": msg.get("content","")
         })
 
     # Add current user message
