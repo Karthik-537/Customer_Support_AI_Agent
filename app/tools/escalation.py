@@ -48,8 +48,8 @@ def escalate_to_human(customer_id: int, reason: str) -> dict[str, Any]:
         ticket = SupportTicket(
             customer_id=customer_id,
             issue=reason,
-            priority=TicketPriority.HIGH,
-            status=TicketStatus.ESCALATED,
+            priority=TicketPriority.HIGH.value,
+            status=TicketStatus.ESCALATED.value,
         )
         db.add(ticket)
         db.commit()

@@ -100,7 +100,7 @@ def cancel_order(order_id: int) -> dict[str, Any]:
         if order is None:
             return {"success": False, "error": "Order not found"}
 
-        if order.status == OrderStatus.CANCELLED:
+        if order.status == OrderStatus.CANCELLED.value:
             return {
                 "success": False,
                 "order_id": order.id,
@@ -108,7 +108,7 @@ def cancel_order(order_id: int) -> dict[str, Any]:
                 "error": "Order cannot be cancelled because it is already cancelled.",
             }
 
-        if order.status in [OrderStatus.SHIPPED, OrderStatus.DELIVERED]:
+        if order.status in [OrderStatus.SHIPPED.value, OrderStatus.DELIVERED.value]:
             return {
                 "success": False,
                 "order_id": order.id,
@@ -116,7 +116,7 @@ def cancel_order(order_id: int) -> dict[str, Any]:
                 "error": f"Order cannot be cancelled because it has already been {order.status.value.lower()}.",
             }
 
-        if order.status not in [OrderStatus.PENDING, OrderStatus.CONFIRMED]:
+        if order.status not in [OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value]:
             return {
                 "success": False,
                 "order_id": order.id,
@@ -124,7 +124,7 @@ def cancel_order(order_id: int) -> dict[str, Any]:
                 "error": f"Order cannot be cancelled in its current state: {order.status.value}.",
             }
 
-        order.status = OrderStatus.CANCELLED
+        order.status = OrderStatus.CANCELLED.value
         db.commit()
 
         return {

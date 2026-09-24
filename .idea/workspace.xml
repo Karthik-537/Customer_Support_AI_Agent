@@ -7,9 +7,8 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Implemented integration">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="qdrant issue fixed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/memory/long_term_memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/long_term_memory.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -305,7 +304,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790184983972</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="qdrant issue fixed">
+      <option name="closed" value="true" />
+      <created>1790225673916</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1790225673916</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -327,6 +334,7 @@
     <MESSAGE value="Removed workflow state" />
     <MESSAGE value="Implementing streamlit UI" />
     <MESSAGE value="Implemented integration" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented integration" />
+    <MESSAGE value="qdrant issue fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="qdrant issue fixed" />
   </component>
 </project>
