@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database.db import Base
@@ -138,6 +138,7 @@ class Conversation(Base):
     title = Column(String, nullable=True, default="New Conversation")
     created_at = Column(DateTime, nullable=False, default=utc_now)
     updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
+    is_deleted = Column(Boolean, nullable=False, default=False, server_default="0", index=True)
 
     customer = relationship("Customer", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
@@ -153,11 +154,11 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     conversation_id = Column(String, ForeignKey("conversations.conversation_id"), nullable=False, index=True)
-    role = Column(String, nullable=False)  # "user" or "assistant"
-    content = Column(Text, nullable=False)
+    user_message = Column(Text, nullable=False)
+    response = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, default=utc_now)
 
     conversation = relationship("Conversation", back_populates="messages")
 
     def __repr__(self) -> str:
-        return f"<Message id={self.id} role={self.role!r} conversation_id={self.conversation_id!r}>"
+        return f"<Message id={self.id} conversation_id={self.conversation_id!r}>"

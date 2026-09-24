@@ -9,8 +9,7 @@ This package provides:
 """
 
 from app.memory.conversation_memory import (
-    add_message,
-    clear_conversation,
+    add_conversation_message,
     create_conversation,
     delete_conversation,
     generate_conversation_id,
@@ -23,8 +22,7 @@ from app.memory.conversation_memory import (
 )
 
 __all__ = [
-    "add_message",
-    "clear_conversation",
+    "add_conversation_message",
     "create_conversation",
     "delete_conversation",
     "generate_conversation_id",

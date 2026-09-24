@@ -9,8 +9,6 @@ from app.agent.agent import get_agent
 from app.database.db import SessionLocal
 from app.database.models import Customer
 from app.memory.conversation_memory import (
-    add_message,
-    clear_conversation,
     create_conversation,
     delete_conversation,
     get_conversation,
@@ -88,6 +86,7 @@ def create_new_conversation(payload: ConversationCreateRequest) -> ConversationR
         title=result.get("title"),
         created_at=result.get("created_at"),
         updated_at=result.get("created_at"),
+        is_deleted=result.get("is_deleted", False),
     )
 
 
@@ -106,6 +105,7 @@ def get_conversation_by_id(conversation_id: str) -> ConversationResponse:
         title=result.get("title"),
         created_at=result.get("created_at"),
         updated_at=result.get("updated_at"),
+        is_deleted=result.get("is_deleted", False),
     )
 
 
@@ -122,8 +122,8 @@ def get_conversation_messages(conversation_id: str) -> MessagesResponse:
         messages=[
             MessageRecord(
                 id=item["id"],
-                role=item["role"],
-                content=item["content"],
+                user_message=item["user_message"],
+                response=item["response"],
                 created_at=item["created_at"],
             )
             for item in result.get("messages", [])
@@ -150,6 +150,7 @@ def list_conversations_for_user(user_id: int) -> ConversationsListResponse:
                 title=item.get("title"),
                 created_at=item.get("created_at"),
                 updated_at=item.get("updated_at"),
+                is_deleted=item.get("is_deleted", False),
             )
             for item in result.get("conversations", [])
         ],
@@ -171,6 +172,7 @@ def update_conversation_metadata(conversation_id: str, payload: ConversationUpda
         user_id=_ensure_conversation_owned(conversation_id, payload.user_id).get("user_id"),
         title=result.get("title"),
         updated_at=result.get("updated_at"),
+        is_deleted=result.get("is_deleted", False),
     )
 
 
@@ -183,7 +185,11 @@ def delete_conversation_by_id(conversation_id: str, user_id: int = Query(..., de
     if not result.get("success"):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=result.get("error", "Could not delete conversation"))
 
-    return {"success": True, "conversation_id": conversation_id}
+    return {
+        "success": True,
+        "conversation_id": conversation_id,
+        "is_deleted": result.get("is_deleted", True),
+    }
 
 
 @router.post("/chat", response_model=ChatResponse)

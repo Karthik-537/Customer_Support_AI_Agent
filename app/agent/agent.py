@@ -12,7 +12,7 @@ from app.agent.rag_interface import format_rag_context
 from app.agent.tool_registry import execute_tool
 from app.agent.tool_schemas import get_tool_schemas
 from app.memory.context_builder import build_context
-from app.memory.conversation_memory import add_message, get_or_create_conversation
+from app.memory.conversation_memory import add_conversation_message, get_or_create_conversation
 from app.memory.memory_extractor import extract_memory_candidates
 from app.memory.memory_processor import process_memory_candidates
 
@@ -115,8 +115,7 @@ class CustomerSupportAgent:
                 content = assistant_message.get("content", "")
 
                 # Step 4: Store conversation messages
-                add_message(active_conversation_id, "user", user_message)
-                add_message(active_conversation_id, "assistant", content)
+                add_conversation_message(active_conversation_id, user_message, content)
 
                 # Step 5: Extract and process long-term memory (non-blocking)
                 try:

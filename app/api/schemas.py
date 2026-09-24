@@ -45,6 +45,7 @@ class ConversationResponse(BaseModel):
     title: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    is_deleted: bool = False
     error: Optional[str] = None
 
 
@@ -56,11 +57,11 @@ class ConversationUpdateRequest(BaseModel):
 
 
 class MessageRecord(BaseModel):
-    """Single message in a conversation."""
+    """Single user/assistant exchange in a conversation."""
 
     id: int
-    role: str
-    content: str
+    user_message: str
+    response: str
     created_at: str
 
 

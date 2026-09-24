@@ -78,7 +78,8 @@ def get_conversation(conversation_id: str) -> Dict[str, Any]:
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id
+            Conversation.conversation_id == conversation_id,
+            Conversation.is_deleted.is_(False),
         ).first()
 
         if conversation is None:
@@ -91,7 +92,8 @@ def get_conversation(conversation_id: str) -> Dict[str, Any]:
             "user_id": conversation.user_id,
             "title": conversation.title,
             "created_at": conversation.created_at.isoformat(),
-            "updated_at": conversation.updated_at.isoformat()
+            "updated_at": conversation.updated_at.isoformat(),
+            "is_deleted": conversation.is_deleted,
         }
     except Exception as e:
         logger.error(f"Error getting conversation: {e}")
@@ -128,17 +130,17 @@ def get_or_create_conversation(
     return create_conversation(user_id, title)
 
 
-def add_message(
+def add_conversation_message(
     conversation_id: str,
-    role: str,
-    content: str
+    user_message: str,
+    response: str,
 ) -> Dict[str, Any]:
-    """Add a message to a conversation.
+    """Add one user/assistant exchange to a conversation.
 
     Args:
         conversation_id: The conversation ID.
-        role: The message role ("user" or "assistant").
-        content: The message content.
+        user_message: The customer's message.
+        response: The assistant's response.
 
     Returns:
         Dictionary containing the created message info.
@@ -147,7 +149,8 @@ def add_message(
     try:
         # Verify conversation exists
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id
+            Conversation.conversation_id == conversation_id,
+            Conversation.is_deleted.is_(False),
         ).first()
 
         if conversation is None:
@@ -155,8 +158,8 @@ def add_message(
 
         message = Message(
             conversation_id=conversation_id,
-            role=role,
-            content=content
+            user_message=user_message,
+            response=response,
         )
         db.add(message)
         db.commit()
@@ -166,12 +169,13 @@ def add_message(
         conversation.updated_at = datetime.now(timezone.utc)
         db.commit()
 
-        logger.info(f"Added {role} message to conversation {conversation_id}")
+        logger.info(f"Added exchange to conversation {conversation_id}")
         return {
             "success": True,
             "message_id": message.id,
             "conversation_id": conversation_id,
-            "role": message.role,
+            "user_message": message.user_message,
+            "response": message.response,
             "created_at": message.created_at.isoformat()
         }
     except Exception as e:
@@ -197,8 +201,15 @@ def get_messages(
     """
     db: Session = SessionLocal()
     try:
+        conversation = db.query(Conversation).filter(
+            Conversation.conversation_id == conversation_id,
+            Conversation.is_deleted.is_(False),
+        ).first()
+        if conversation is None:
+            return {"success": False, "error": "Conversation not found"}
+
         query = db.query(Message).filter(
-            Message.conversation_id == conversation_id
+            Message.conversation_id == conversation.conversation_id,
         ).order_by(Message.created_at)
 
         if limit:
@@ -212,8 +223,8 @@ def get_messages(
             "messages": [
                 {
                     "id": msg.id,
-                    "role": msg.role,
-                    "content": msg.content,
+                    "user_message": msg.user_message,
+                    "response": msg.response,
                     "created_at": msg.created_at.isoformat()
                 }
                 for msg in messages
@@ -261,7 +272,8 @@ def update_conversation(
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id
+            Conversation.conversation_id == conversation_id,
+            Conversation.is_deleted.is_(False),
         ).first()
 
         if conversation is None:
@@ -289,34 +301,6 @@ def update_conversation(
         db.close()
 
 
-def clear_conversation(conversation_id: str) -> Dict[str, Any]:
-    """Delete all messages from a conversation (keeps conversation record).
-
-    Args:
-        conversation_id: The conversation ID.
-
-    Returns:
-        Dictionary indicating success/failure.
-    """
-    db: Session = SessionLocal()
-    try:
-        # Delete all messages
-        db.query(Message).filter(
-            Message.conversation_id == conversation_id
-        ).delete()
-
-        db.commit()
-
-        logger.info(f"Cleared conversation {conversation_id}")
-        return {"success": True, "conversation_id": conversation_id}
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error clearing conversation: {e}")
-        return {"success": False, "error": f"Database error: {str(e)}"}
-    finally:
-        db.close()
-
-
 def delete_conversation(conversation_id: str) -> Dict[str, Any]:
     """Delete a conversation and all its messages.
 
@@ -328,15 +312,19 @@ def delete_conversation(conversation_id: str) -> Dict[str, Any]:
     """
     db: Session = SessionLocal()
     try:
-        # Delete conversation (messages will cascade delete)
-        db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id
-        ).delete()
+        conversation = db.query(Conversation).filter(
+            Conversation.conversation_id == conversation_id,
+            Conversation.is_deleted.is_(False),
+        ).first()
 
+        if conversation is None:
+            return {"success": False, "error": "Conversation not found"}
+
+        conversation.is_deleted = True
         db.commit()
 
-        logger.info(f"Deleted conversation {conversation_id}")
-        return {"success": True, "conversation_id": conversation_id}
+        logger.info(f"Soft-deleted conversation {conversation_id}")
+        return {"success": True, "conversation_id": conversation_id, "is_deleted": True}
     except Exception as e:
         db.rollback()
         logger.error(f"Error deleting conversation: {e}")
@@ -357,7 +345,8 @@ def list_user_conversations(user_id: int) -> Dict[str, Any]:
     db: Session = SessionLocal()
     try:
         conversations = db.query(Conversation).filter(
-            Conversation.user_id == user_id
+            Conversation.user_id == user_id,
+            Conversation.is_deleted.is_(False),
         ).order_by(Conversation.updated_at.desc()).all()
 
         return {
@@ -369,7 +358,8 @@ def list_user_conversations(user_id: int) -> Dict[str, Any]:
                     "conversation_id": conv.conversation_id,
                     "title": conv.title,
                     "created_at": conv.created_at.isoformat(),
-                    "updated_at": conv.updated_at.isoformat()
+                    "updated_at": conv.updated_at.isoformat(),
+                    "is_deleted": conv.is_deleted,
                 }
                 for conv in conversations
             ]

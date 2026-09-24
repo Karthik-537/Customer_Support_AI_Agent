@@ -57,12 +57,10 @@ def build_context(
     # Recent conversation messages
     recent_messages = get_recent_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
 
-    # Add conversation history
+    # Convert stored exchanges back into the role-based format expected by the LLM.
     for msg in recent_messages:
-        messages.append({
-            "role": msg.get("role", ""),
-            "content": msg.get("content", "")
-        })
+        messages.append({"role": "user", "content": msg.get("user_message", "")})
+        messages.append({"role": "assistant", "content": msg.get("response", "")})
 
     # Add current user message
     messages.append({

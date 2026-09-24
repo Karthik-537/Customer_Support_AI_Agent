@@ -149,6 +149,16 @@ if active_conv_id:
                     except ApiClientError as exc:
                         st.error(str(exc))
 
+        with st.popover("Delete"):
+            st.warning("Delete this conversation? Its history will be retained but hidden.")
+            if st.button("Confirm delete", key=f"delete_{active_conv_id}", use_container_width=True):
+                try:
+                    delete_conversation(active_conv_id, st.session_state.customer_id)
+                    st.session_state.conversation_id = None
+                    st.rerun()
+                except ApiClientError as exc:
+                    st.error(str(exc))
+
     st.divider()
 
     try:
@@ -162,10 +172,12 @@ if active_conv_id:
         st.info("This is the beginning of your conversation. Ask about orders, policies, or products below.")
     else:
         for msg in messages:
-            role = msg.get("role", "assistant")
-            content = msg.get("content", "")
-            with st.chat_message(role):
-                st.markdown(content)
+            if msg.get("user_message"):
+                with st.chat_message("user"):
+                    st.markdown(msg["user_message"])
+            if msg.get("response"):
+                with st.chat_message("assistant"):
+                    st.markdown(msg["response"])
 
 else:
     active_customer = customer_map[st.session_state.customer_id]
@@ -226,4 +238,3 @@ if user_message:
                 logger.error(f"Unexpected API error: {exc}", exc_info=True)
                 st.error("Sorry, I couldn't process your request right now. Please try again.")
 
-    st.rerun()
