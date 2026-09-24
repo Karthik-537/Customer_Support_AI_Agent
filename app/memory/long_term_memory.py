@@ -183,7 +183,7 @@ def search_memories(
         search_filter = Filter(must=conditions)
 
         # Search using the Qdrant query API
-        results = client.query(
+        results = client.query_points(
             collection_name=MEMORY_COLLECTION,
             query_vector=query_embedding,
             query_filter=search_filter,
@@ -191,7 +191,7 @@ def search_memories(
         )
 
         memories = []
-        for result in results:
+        for result in results.points:
             payload = result.payload
             memories.append({
                 "memory_id": payload.get("memory_id"),
