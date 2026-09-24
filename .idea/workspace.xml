@@ -7,16 +7,8 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="qdrant issue fixed">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Added columns in memory model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/memory/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/memory/context_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/context_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/memory/conversation_memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/conversation_memory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -321,7 +313,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790225673916</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Added columns in memory model">
+      <option name="closed" value="true" />
+      <created>1790264677961</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1790264677961</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -344,6 +344,7 @@
     <MESSAGE value="Implementing streamlit UI" />
     <MESSAGE value="Implemented integration" />
     <MESSAGE value="qdrant issue fixed" />
-    <option name="LAST_COMMIT_MESSAGE" value="qdrant issue fixed" />
+    <MESSAGE value="Added columns in memory model" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added columns in memory model" />
   </component>
 </project>

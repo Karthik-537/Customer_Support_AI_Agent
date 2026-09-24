@@ -45,6 +45,91 @@ def load_customers():
         return []
 
 
+@st.dialog("Delete chat?")
+def confirm_delete_conversation(conversation_id: str, conversation_title: str) -> None:
+    """Confirm and soft-delete a conversation."""
+    st.write(f"This will delete **{conversation_title}**.")
+    cancel_col, delete_col = st.columns(2)
+    with cancel_col:
+        if st.button("Cancel", use_container_width=True):
+            st.rerun()
+    with delete_col:
+        if st.button("Delete", type="primary", use_container_width=True):
+            try:
+                delete_conversation(conversation_id, st.session_state.customer_id)
+                if st.session_state.get("conversation_id") == conversation_id:
+                    st.session_state.conversation_id = None
+                st.session_state.open_conversation_actions = None
+                st.rerun()
+            except ApiClientError as exc:
+                st.error(str(exc))
+
+
+@st.dialog("Rename conversation")
+def rename_conversation_dialog(conversation_id: str, current_title: str) -> None:
+    """Rename a conversation from its action menu."""
+    new_title = st.text_input("Conversation Title", value=current_title)
+    if st.button("Save", type="primary", use_container_width=True):
+        if new_title.strip():
+            try:
+                rename_conversation(
+                    conversation_id,
+                    st.session_state.customer_id,
+                    new_title.strip(),
+                )
+                st.rerun()
+            except ApiClientError as exc:
+                st.error(str(exc))
+
+
+@st.dialog("Conversation actions")
+def conversation_actions_dialog(conversation_id: str, conversation_title: str) -> None:
+    """Show rename and delete actions without nesting dialogs."""
+    action_mode = st.session_state.get("conversation_action_mode")
+
+    if action_mode == f"rename:{conversation_id}":
+        new_title = st.text_input("Conversation Title", value=conversation_title)
+        if st.button("Save", type="primary", use_container_width=True):
+            if new_title.strip():
+                try:
+                    rename_conversation(
+                        conversation_id,
+                        st.session_state.customer_id,
+                        new_title.strip(),
+                    )
+                    st.session_state.conversation_action_mode = None
+                    st.rerun()
+                except ApiClientError as exc:
+                    st.error(str(exc))
+        return
+
+    if action_mode == f"delete:{conversation_id}":
+        st.write(f"This will delete **{conversation_title}**.")
+        cancel_col, delete_col = st.columns(2)
+        with cancel_col:
+            if st.button("Cancel", use_container_width=True):
+                st.session_state.conversation_action_mode = None
+                st.rerun(scope="fragment")
+        with delete_col:
+            if st.button("Delete", type="primary", use_container_width=True):
+                try:
+                    delete_conversation(conversation_id, st.session_state.customer_id)
+                    if st.session_state.get("conversation_id") == conversation_id:
+                        st.session_state.conversation_id = None
+                    st.session_state.conversation_action_mode = None
+                    st.rerun()
+                except ApiClientError as exc:
+                    st.error(str(exc))
+        return
+
+    if st.button("Rename", use_container_width=True):
+        st.session_state.conversation_action_mode = f"rename:{conversation_id}"
+        st.rerun(scope="fragment")
+    if st.button("Delete", use_container_width=True):
+        st.session_state.conversation_action_mode = f"delete:{conversation_id}"
+        st.rerun(scope="fragment")
+
+
 # -----------------------------------------------------------------------------
 # Sidebar: Customer Selection & Conversation Navigation
 # -----------------------------------------------------------------------------
@@ -105,14 +190,56 @@ except ApiClientError as exc:
 if not conversations:
     st.sidebar.caption("No conversations yet for this customer.")
 else:
+    st.markdown(
+        """
+        <style>
+        [class*="st-key-conversation_row_"] {
+            background: #1f1f24;
+            border: 1px solid #474751;
+            border-radius: 12px;
+            padding: 6px 8px;
+            margin-bottom: 8px;
+        }
+        [class*="st-key-conversation_row_"] button {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+        [class*="st-key-conversation_row_"] button:hover {
+            background: #2b2b32;
+            border: 0;
+        }
+        [class*="st-key-conversation_row_"] > div > div > div:first-child button {
+            justify-content: flex-start;
+        }
+        [class*="st-key-sidebar_actions_"] button {
+            color: #ffffff;
+            font-size: 1.2rem;
+            min-width: 36px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     for conv in conversations:
         conv_id = conv["conversation_id"]
         conv_title = conv.get("title") or "New Conversation"
-        is_active = st.session_state.get("conversation_id") == conv_id
-        button_label = f"▶ {conv_title}" if is_active else f"💬 {conv_title}"
-        if st.sidebar.button(button_label, key=f"conv_btn_{conv_id}", use_container_width=True):
-            st.session_state.conversation_id = conv_id
-            st.rerun()
+        with st.sidebar.container(key=f"conversation_row_{conv_id}"):
+            conversation_col, actions_col = st.columns([9, 1])
+            with conversation_col:
+                if st.button(conv_title, key=f"conv_btn_{conv_id}", use_container_width=True):
+                    st.session_state.conversation_id = conv_id
+                    st.rerun()
+            with actions_col:
+                if st.button(
+                    "",
+                    icon=":material/more_horiz:",
+                    key=f"sidebar_actions_{conv_id}",
+                    help="Conversation actions",
+                    use_container_width=True,
+                ):
+                    st.session_state.conversation_action_mode = None
+                    conversation_actions_dialog(conv_id, conv_title)
 
 
 # -----------------------------------------------------------------------------
@@ -139,25 +266,13 @@ if active_conv_id:
         st.caption(f"Customer: **{customer_map[st.session_state.customer_id]['name']}** | Conversation ID: `{active_conv_id}`")
 
     with header_col2:
-        with st.popover("✏️ Rename"):
-            new_title = st.text_input("Conversation Title", value=current_title, key=f"title_{active_conv_id}")
-            if st.button("Save", key="save_title_btn", use_container_width=True):
-                if new_title.strip():
-                    try:
-                        rename_conversation(active_conv_id, st.session_state.customer_id, new_title.strip())
-                        st.rerun()
-                    except ApiClientError as exc:
-                        st.error(str(exc))
-
-        with st.popover("Delete"):
-            st.warning("Delete this conversation? Its history will be retained but hidden.")
-            if st.button("Confirm delete", key=f"delete_{active_conv_id}", use_container_width=True):
-                try:
-                    delete_conversation(active_conv_id, st.session_state.customer_id)
-                    st.session_state.conversation_id = None
-                    st.rerun()
-                except ApiClientError as exc:
-                    st.error(str(exc))
+        if st.button(
+            "⋯",
+            key=f"main_actions_{active_conv_id}",
+            help="Conversation actions",
+        ):
+            st.session_state.conversation_action_mode = None
+            conversation_actions_dialog(active_conv_id, current_title)
 
     st.divider()
 
