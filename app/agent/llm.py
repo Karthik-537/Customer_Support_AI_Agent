@@ -93,9 +93,8 @@ class GeminiClient:
                         "arguments": dict(function_call.args or {}),
                     },
                 })
-        contents = []
         return {
-            "contents": contents.append(response.candidates[0].content),
+            "content": response.candidates[0].content if response.candidates else None,
             "tool_calls": tool_calls,
             "text": response.text if response.text else ""
         }

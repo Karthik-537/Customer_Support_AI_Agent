@@ -96,8 +96,9 @@ class CustomerSupportAgent:
                     "error": f"LLM error: {str(e)}",
                     "response": "I'm sorry, I'm having trouble connecting to my language model. Please try again later."
                 }
-            contents = response.get("contents", [])
-
+            model_content = response.get("content")
+            if model_content is not None:
+                contents.append(model_content)
             # Check if the LLM requested tool calls
             tool_calls = response.get("tool_calls", [])
             tool_results = []
@@ -157,8 +158,7 @@ class CustomerSupportAgent:
                     tool_results.append(
                         types.Part.from_function_response(
                             name=tool_name,
-                            response={"result": tool_result},
-                            id=tool_call.get("id", "")
+                            response={"result": tool_result}
                         )
                     )
 
@@ -168,8 +168,7 @@ class CustomerSupportAgent:
                     tool_results.append(
                         types.Part.from_function_response(
                             name=tool_name,
-                            response={"result": error_message},
-                            id=tool_call.get("id", "")
+                            response={"result": error_message}
                         )
                     )
                 except Exception as e:
@@ -178,11 +177,10 @@ class CustomerSupportAgent:
                     tool_results.append(
                         types.Part.from_function_response(
                             name=tool_name,
-                            response={"result": error_message},
-                            id=tool_call.get("id", "")
+                            response={"result": error_message}
                         )
                     )
-            contents.append(types.Content(role="user", parts=[tool_results]))
+            contents.append(types.Content(role="user", parts=tool_results))
 
         # Max iterations reached
         logger.warning(f"Max iterations ({max_iterations}) reached")
