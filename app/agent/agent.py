@@ -145,15 +145,8 @@ class CustomerSupportAgent:
                 logger.info(f"Executing tool: {tool_name} with args: {tool_args}")
 
                 try:
-                    # Execute the tool
                     tool_result = execute_tool(tool_name, **tool_args)
                     logger.info(f"Tool result: {tool_result}")
-
-                    # Special handling for RAG results
-                    if tool_name == "retrieve_company_knowledge" and tool_result.get("success"):
-                        # Format RAG results as context for the LLM
-                        rag_context = format_rag_context(tool_result.get("results", []))
-                        tool_result = f"COMPANY KNOWLEDGE:\n\n{rag_context}"
 
                     tool_results.append(
                         types.Part.from_function_response(

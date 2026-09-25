@@ -7,10 +7,13 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Minor Change">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/llm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/rag_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/rag_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/long_term_memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/long_term_memory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/qdrant_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/qdrant_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/rag/rag_answer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/rag_answer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,12 +67,14 @@
   &quot;keyToString&quot;: {
     &quot;Python.db.executor&quot;: &quot;Run&quot;,
     &quot;Python.ingest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run server.executor&quot;: &quot;Debug&quot;,
     &quot;Python.seed.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/91934/PycharmProjects/Customer_Support_AI_Agent/app&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -79,7 +84,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.seed">
+  <component name="RunManager" selected="Python.run server">
     <configuration name="db" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Customer_Support_AI_Agent" />
       <option name="ENV_FILES" value="" />
@@ -124,31 +129,36 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="seed" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="run server" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Customer_Support_AI_Agent" />
-      <option name="ENV_FILES" value="" />
+      <option name="ENV_FILES" value="$PROJECT_DIR$/.env" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/database" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\91934\PycharmProjects\Customer_Support_AI_Agent" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/database/seed.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="SCRIPT_NAME" value="uvicorn" />
+      <option name="PARAMETERS" value="app.main:app --host localhost --port 8000" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
+      <option name="MODULE_MODE" value="true" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.db" />
+      <item itemvalue="Python.ingest" />
+      <item itemvalue="Python.run server" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.seed" />
+        <item itemvalue="Python.run server" />
         <item itemvalue="Python.ingest" />
         <item itemvalue="Python.db" />
       </list>
@@ -338,7 +348,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790317650747</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Bug fix">
+      <option name="closed" value="true" />
+      <created>1790321794698</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1790321794700</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -364,6 +382,7 @@
     <MESSAGE value="Using Gemini model" />
     <MESSAGE value="Shifted from Ollama to Gemini model" />
     <MESSAGE value="Minor Change" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor Change" />
+    <MESSAGE value="Bug fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Bug fix" />
   </component>
 </project>

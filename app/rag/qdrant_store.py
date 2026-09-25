@@ -178,15 +178,15 @@ def search_chunks(
     """
     client = get_qdrant_client()
 
-    search_results = client.search(
+    search_results = client.query_points(
         collection_name=collection_name,
-        query_vector=query_embedding,
+        query=query_embedding,
         limit=limit,
         score_threshold=score_threshold
     )
 
     results = []
-    for result in search_results:
+    for result in search_results.points:
         payload = result.payload
         results.append({
             "text": payload.get("text", ""),

@@ -185,7 +185,7 @@ def search_memories(
         # Search using the Qdrant query API
         results = client.query_points(
             collection_name=MEMORY_COLLECTION,
-            query_vector=query_embedding,
+            query=query_embedding,
             query_filter=search_filter,
             limit=top_k
         )

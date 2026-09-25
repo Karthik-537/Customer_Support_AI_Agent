@@ -52,22 +52,17 @@ def retrieve_company_knowledge(query: str) -> Dict[str, Any]:
     logger.info(f"Retrieving company knowledge for: {query[:100]}...")
 
     try:
-        # Call the existing RAG retriever
         results = search_knowledge_base(
             query=query,
             top_k=top_k,
             score_threshold=score_threshold
         )
-
-        logger.info(f"Retrieved {len(results)} relevant chunks")
-
         return {
             "success": True,
             "query": query,
             "results": results,
             "retrieved_count": len(results)
         }
-
     except Exception as e:
         logger.error(f"Error retrieving company knowledge: {e}")
         return {

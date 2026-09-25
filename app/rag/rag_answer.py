@@ -84,14 +84,11 @@ Please answer the question based on the provided knowledge."""
         response = gemini_client.generate_response(contents=contents, prompt=system_prompt)
 
         # Extract the answer
-        if response.get("message") and response["message"].get("content"):
-            answer = response["message"]["content"]
+        if response["text"]:
+            answer = response["text"]
             logger.info("RAG answer generated successfully")
             return {
-                "success": True,
-                "answer": answer,
-                "chunks_used": len(chunks),
-                "context_length": len(context)
+                "answer": answer
             }
         else:
             logger.error("Invalid response from LLM")
@@ -141,9 +138,5 @@ def rag_pipeline(
 
     # Step 2: Generate answer using retrieved chunks
     result = generate_rag_answer(query, chunks)
-
-    # Add retrieval metadata to result
-    result["retrieved_chunks"] = len(chunks)
-    result["chunks"] = chunks
 
     return result
