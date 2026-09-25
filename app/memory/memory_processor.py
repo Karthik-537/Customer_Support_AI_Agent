@@ -53,19 +53,19 @@ If multiple independent facts are worth remembering, create separate memories.
 
 Return ONLY valid JSON:
 
-{
+{{
     "memories": [
-        {
+        {{
             "content": "..."
-        }
+        }}
     ]
-}
+}}
 
 If nothing is suitable for long-term memory:
 
-{
+{{
     "memories": []
-}
+}}
 """
 
 
