@@ -1,6 +1,6 @@
-"""Integration test for the agent with real Ollama calls.
+"""Integration test for the agent with real Gemini calls.
 
-This script tests the agent with actual Ollama responses to verify
+This script tests the agent with actual Gemini responses to verify
 tool calling works end-to-end.
 """
 
@@ -14,10 +14,10 @@ sys.path.insert(0, str(project_root))
 from app.agent.agent import get_agent
 
 
-def test_ollama_integration():
-    """Test the agent with real Ollama calls."""
+def test_gemini_integration():
+    """Test the agent with real Gemini calls."""
     print("=" * 60)
-    print("Ollama Integration Test")
+    print("Gemini Integration Test")
     print("=" * 60)
     print()
 
@@ -25,7 +25,6 @@ def test_ollama_integration():
         agent = get_agent()
         print("[OK] Agent initialized successfully")
         print(f"[OK] Model: {agent.llm_client.model}")
-        print(f"[OK] Host: {agent.llm_client.host}")
         print(f"[OK] Available tools: {len(agent.tool_schemas)}")
         print()
     except Exception as e:
@@ -65,5 +64,5 @@ def test_ollama_integration():
 
 
 if __name__ == "__main__":
-    success = test_ollama_integration()
+    success = test_gemini_integration()
     sys.exit(0 if success else 1)

@@ -6,7 +6,7 @@ A local Customer Support AI Agent for interview-ready Python backend work. This 
 
 The planned application will help customers through chat while using company documents, customer memory, and operational tools (orders, inventory, tickets, escalation).
 
-## Planned architecture
+## Planned architecture (Updated for Gemini)
 
 ```
 Customer
@@ -17,7 +17,7 @@ FastAPI
    ↓
 AI Agent
    ↓
-Ollama / Qwen3
+Google Gemini API with `gemini-2.5-flash`
    ↓
 --------------------------------
 | RAG | Memory | Tools |
@@ -48,18 +48,17 @@ No cloud APIs, LangChain, LangGraph, LlamaIndex, or other agent frameworks.
 Before the app can run (once implemented):
 
 1. Python 3.10+ and a virtual environment
-2. [Ollama](https://ollama.com/) with the `qwen3:8b` model
+2. A Google Gemini API key
 3. Docker, for a local Qdrant container
 
 ## How to start Ollama
 
-1. Install Ollama from https://ollama.com/
-2. Start the Ollama service (it typically listens on `http://localhost:11434`)
-3. Pull and run the model:
+## Configure Gemini
+Set these values in `.env`:
 
 ```bash
-ollama pull qwen3:8b
-ollama run qwen3:8b
+GEMINI_API_KEY=your_api_key
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ## How to run Qdrant

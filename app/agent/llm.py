@@ -1,11 +1,13 @@
-"""Ollama client wrapper for LLM interactions."""
+"""Gemini client wrapper for LLM interactions."""
 
+import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
-from ollama import Client
+from google import genai
+from google.genai import types
 
 # Load environment variables
 load_dotenv()
@@ -14,54 +16,94 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class OllamaClient:
-    """Wrapper around Ollama client for LLM interactions."""
+class GeminiClient:
+    """Wrapper around Gemini with the response contract used by the agent."""
 
-    def __init__(self, host: Optional[str] = None, model: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         """Initialize the Ollama client.
 
         Args:
-            host: Ollama server host URL. Defaults to OLLAMA_HOST env var or localhost:11434.
-            model: Model name to use. Defaults to OLLAMA_MODEL env var or qwen3:8b.
+            api_key: Gemini API key. Defaults to GEMINI_API_KEY.
+            model: Gemini model name. Defaults to GEMINI_MODEL or gemini-2.5-flash.
         """
-        self.host = host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
-        self.model = model or os.getenv("OLLAMA_MODEL", "qwen3:8b")
-        self.client = Client(host=self.host)
-        logger.info(f"Initialized Ollama client with host={self.host}, model={self.model}")
+        resolved_api_key = api_key or os.getenv("GEMINI_API_KEY")
+        if not resolved_api_key:
+            raise ValueError("GEMINI_API_KEY must be set to use Gemini")
+        self.model = model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.client = genai.Client(api_key=resolved_api_key)
+        logger.info("Initialized Gemini client with model=%s", self.model)
 
-    def generate_response(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    def generate_response(self, contents: List, tools: Optional[List[Dict[str, Any]]] = None,
+                          prompt: Optional[str] = None) -> Dict[str, Any]:
         """Generate a response from the LLM.
 
         Args:
-            messages: List of message dictionaries with 'role' and 'content'.
+            contents: List of contents.
             tools: Optional list of tool definitions for function calling.
+            prompt: system prompt
 
         Returns:
             Response dictionary containing the LLM's response and any tool calls.
         """
         try:
-            logger.info(f"Sending request to Ollama with {len(messages)} messages")
+            logger.info("Sending request to Gemini with %s messages", len(contents))
             if tools:
-                logger.info(f"Providing {len(tools)} tools to LLM")
+                logger.info("Providing %s tools to Gemini", len(tools))
+            from prompts import get_system_prompt
 
-            response = self.client.chat(
+            system_instruction = get_system_prompt() if not prompt else prompt
+            config = types.GenerateContentConfig(
+                system_instruction=system_instruction or None,
+                tools=[types.Tool(function_declarations=[self._convert_tool(tool) for tool in tools])]
+                if tools else None,
+            )
+            response = self.client.models.generate_content(
                 model=self.model,
-                messages=messages,
-                tools=tools if tools else None,
+                contents=contents,
+                config=config,
             )
 
-            logger.info("Received response from Ollama")
-            return response
+            logger.info("Received response from Gemini")
+            return self._convert_response(response)
 
         except Exception as e:
-            logger.error(f"Error calling Ollama: {e}")
+            logger.error("Error calling Gemini: %s", e)
             raise
 
+    @staticmethod
+    def _convert_tool(tool: Dict[str, Any]) -> types.FunctionDeclaration:
+        function = tool["function"]
+        return types.FunctionDeclaration(
+            name=function["name"],
+            description=function.get("description"),
+            parameters=function.get("parameters"),
+        )
 
-def get_ollama_client() -> OllamaClient:
-    """Get a configured Ollama client instance.
+    @staticmethod
+    def _convert_response(response: Any) -> Dict[str, Any]:
+        parts = response.candidates[0].content.parts if response.candidates else []
+        tool_calls = []
+        for index, part in enumerate(parts):
+            function_call = getattr(part, "function_call", None)
+            if function_call:
+                tool_calls.append({
+                    "id": function_call.id,
+                    "function": {
+                        "name": function_call.name,
+                        "arguments": dict(function_call.args or {}),
+                    },
+                })
+        contents = []
+        return {
+            "contents": contents.append(response.candidates[0].content),
+            "tool_calls": tool_calls,
+        }
+
+
+def get_gemini_client() -> GeminiClient:
+    """Get a Gemini client configured from environment variables.
 
     Returns:
-        OllamaClient instance configured from environment variables.
+        GeminiClient instance configured from environment variables.
     """
-    return OllamaClient()
+    return GeminiClient()

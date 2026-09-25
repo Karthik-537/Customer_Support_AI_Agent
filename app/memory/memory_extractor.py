@@ -1,4 +1,4 @@
-"""Memory extraction using Qwen3.
+"""Memory extraction using Gemini.
 
 This module uses the LLM to identify useful long-term memory candidates
 from conversation messages.
@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from app.agent.llm import OllamaClient
+from app.agent.llm import GeminiClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ def extract_memory_candidates(user_message: str) -> List[Dict[str, Any]]:
             {"role": "system", "content": prompt}
         ]
 
-        client = OllamaClient()
+        client = GeminiClient()
         response = client.generate_response(messages, tools=None)
 
         content = response.get("message", {}).get("content", "")

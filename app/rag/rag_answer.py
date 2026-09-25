@@ -6,8 +6,9 @@ This module generates answers to user queries using retrieved context.
 import logging
 from typing import Any, Dict, List, Optional
 
-from app.agent.llm import OllamaClient, get_ollama_client
+from app.agent.llm import GeminiClient, get_gemini_client
 from app.agent.prompts import get_rag_prompt
+from google.genai import types
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,23 +42,23 @@ def construct_context(chunks: List[Dict[str, Any]]) -> str:
 def generate_rag_answer(
     query: str,
     chunks: List[Dict[str, Any]],
-    ollama_client: Optional[OllamaClient] = None
+    gemini_client: Optional[GeminiClient] = None
 ) -> Dict[str, Any]:
     """Generate an answer to a query using retrieved chunks.
 
     Args:
         query: The user's question.
         chunks: Retrieved chunks from the knowledge base.
-        ollama_client: Optional Ollama client. If not provided, a default one will be created.
+        gemini_client: Optional Gemini client. If not provided, a default one will be created.
 
     Returns:
         Dictionary containing the generated answer and metadata.
     """
     logger.info(f"Generating RAG answer for query: {query[:100]}...")
 
-    # Get or create Ollama client
-    if ollama_client is None:
-        ollama_client = get_ollama_client()
+    # Get or create Gemini client
+    if gemini_client is None:
+        gemini_client = get_gemini_client()
 
     # Construct context from chunks
     context = construct_context(chunks)
@@ -72,14 +73,15 @@ Question: {query}
 
 Please answer the question based on the provided knowledge."""
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_message}
+    contents = [
+        types.Content(
+            role="user", parts=[types.Part(text=user_message)]
+        )
     ]
 
     try:
         # Generate response from LLM
-        response = ollama_client.generate_response(messages)
+        response = gemini_client.generate_response(contents=contents, prompt=system_prompt)
 
         # Extract the answer
         if response.get("message") and response["message"].get("content"):

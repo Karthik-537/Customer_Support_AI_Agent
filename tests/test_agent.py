@@ -12,18 +12,18 @@ class TestCustomerSupportAgent:
 
     @pytest.fixture
     def mock_ollama_client(self):
-        """Create a mock Ollama client."""
+        """Create a mock LLM client."""
         client = MagicMock()
         return client
 
     @pytest.fixture
     def agent(self, mock_ollama_client):
         """Create an agent with a mocked Ollama client."""
-        return CustomerSupportAgent(ollama_client=mock_ollama_client)
+        return CustomerSupportAgent(gemini_client=mock_ollama_client)
 
     def test_agent_initialization(self, mock_ollama_client):
         """Test that the agent initializes correctly."""
-        agent = CustomerSupportAgent(ollama_client=mock_ollama_client)
+        agent = CustomerSupportAgent(gemini_client=mock_ollama_client)
         assert agent.llm_client == mock_ollama_client
         assert len(agent.tool_schemas) == 6  # We have 6 tools
         assert agent.system_prompt is not None
@@ -437,7 +437,7 @@ class TestCustomerSupportAgent:
 
 def test_get_agent():
     """Test the get_agent factory function."""
-    with patch("app.agent.agent.get_ollama_client") as mock_get_client:
+    with patch("app.agent.agent.get_gemini_client") as mock_get_client:
         mock_client = MagicMock()
         mock_get_client.return_value = mock_client
 
