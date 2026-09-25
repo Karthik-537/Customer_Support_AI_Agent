@@ -33,14 +33,21 @@ class GeminiClient:
         self.client = genai.Client(api_key=resolved_api_key)
         logger.info("Initialized Gemini client with model=%s", self.model)
 
-    def generate_response(self, contents: List, tools: Optional[List[Dict[str, Any]]] = None,
-                          prompt: Optional[str] = None) -> Dict[str, Any]:
+    def generate_response(
+        self, contents: List,
+        memory_content: Optional[Dict[str, list]] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        prompt: Optional[str] = None,
+        response_type: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Generate a response from the LLM.
 
         Args:
             contents: List of contents.
+            memory_content: Contains both short and long term memories
             tools: Optional list of tool definitions for function calling.
             prompt: system prompt
+            response_type: Fixing our response type
 
         Returns:
             Response dictionary containing the LLM's response and any tool calls.
@@ -51,12 +58,17 @@ class GeminiClient:
                 logger.info("Providing %s tools to Gemini", len(tools))
             from app.agent.prompts import get_system_prompt
 
-            system_instruction = get_system_prompt() if not prompt else prompt
+            system_instruction = get_system_prompt(
+                short_term_memories=memory_content["short_term_memories"],
+                long_term_memories=memory_content["long_term_memories"]
+            ) if not prompt else prompt
             config = types.GenerateContentConfig(
                 system_instruction=system_instruction or None,
                 tools=[types.Tool(function_declarations=[self._convert_tool(tool) for tool in tools])]
                 if tools else None,
             )
+            if response_type:
+                config.response_mime_type = response_type
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=contents,

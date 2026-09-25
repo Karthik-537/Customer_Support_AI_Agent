@@ -16,7 +16,6 @@ from app.memory.conversation_memory import (
     get_conversation,
     get_messages,
     get_or_create_conversation,
-    get_recent_messages,
     list_user_conversations,
     update_conversation,
 )
@@ -29,7 +28,6 @@ __all__ = [
     "get_conversation",
     "get_messages",
     "get_or_create_conversation",
-    "get_recent_messages",
     "list_user_conversations",
     "update_conversation",
 ]

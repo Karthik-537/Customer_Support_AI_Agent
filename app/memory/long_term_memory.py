@@ -13,7 +13,8 @@ from app.rag.embeddings import embed_text, get_embedding_dimension
 
 try:
     from qdrant_client import QdrantClient
-    from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+    from qdrant_client.models import Distance, VectorParams, \
+        PointStruct, Filter, FieldCondition, MatchValue, Range
 except ImportError:
     QdrantClient = None
 
@@ -25,7 +26,7 @@ QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 MEMORY_COLLECTION = "customer_memory"
 LONG_TERM_MEMORY_TOP_K = 5
-MEMORY_DUPLICATE_SIMILARITY_THRESHOLD = 0.85
+MEMORY_SCORE_THRESHOLD = 0.5
 
 
 def get_qdrant_client() -> Optional[QdrantClient]:
@@ -84,19 +85,13 @@ def generate_memory_id() -> str:
 
 def add_memory(
     user_id: int,
-    memory_type: str,
-    content: str,
-    importance: int,
-    source_conversation_id: Optional[str] = None
+    content: str
 ) -> Dict[str, Any]:
     """Add a long-term memory for a user.
 
     Args:
         user_id: The user ID.
-        memory_type: Type of memory (e.g., "preference", "fact").
         content: The memory content.
-        importance: Importance score (1-10).
-        source_conversation_id: Optional source conversation ID.
 
     Returns:
         Dictionary containing the created memory info.
@@ -115,13 +110,9 @@ def add_memory(
         payload = {
             "memory_id": memory_id,
             "user_id": user_id,
-            "memory_type": memory_type,
             "content": content,
-            "importance": importance,
-            "active": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-            "source_conversation_id": source_conversation_id
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }
 
         point = PointStruct(
@@ -136,9 +127,7 @@ def add_memory(
         return {
             "success": True,
             "memory_id": memory_id,
-            "user_id": user_id,
-            "memory_type": memory_type,
-            "importance": importance
+            "user_id": user_id
         }
     except Exception as e:
         logger.error(f"Error adding memory: {e}")
@@ -148,8 +137,7 @@ def add_memory(
 def search_memories(
     user_id: int,
     query: str,
-    top_k: int = LONG_TERM_MEMORY_TOP_K,
-    importance_threshold: Optional[int] = None
+    top_k: int = LONG_TERM_MEMORY_TOP_K
 ) -> Dict[str, Any]:
     """Search for relevant long-term memories for a user.
 
@@ -157,7 +145,6 @@ def search_memories(
         user_id: The user ID.
         query: The search query.
         top_k: Maximum number of results.
-        importance_threshold: Optional minimum importance score.
 
     Returns:
         Dictionary containing search results.
@@ -171,14 +158,8 @@ def search_memories(
 
         # Build filter for user_id and active memories
         conditions = [
-            FieldCondition(key="user_id", match=MatchValue(value=user_id)),
-            FieldCondition(key="active", match=MatchValue(value=True))
+            FieldCondition(key="user_id", match=MatchValue(value=user_id))
         ]
-
-        if importance_threshold is not None:
-            conditions.append(
-                FieldCondition(key="importance", match=MatchValue(value=importance_threshold))
-            )
 
         search_filter = Filter(must=conditions)
 
@@ -193,20 +174,17 @@ def search_memories(
         memories = []
         for result in results.points:
             payload = result.payload
+            if result.score < MEMORY_SCORE_THRESHOLD:
+                continue
             memories.append({
                 "memory_id": payload.get("memory_id"),
                 "user_id": payload.get("user_id"),
-                "memory_type": payload.get("memory_type"),
                 "content": payload.get("content"),
-                "importance": payload.get("importance"),
                 "score": result.score,
-                "created_at": payload.get("created_at"),
-                "source_conversation_id": payload.get("source_conversation_id")
+                "created_at": payload.get("created_at")
             })
 
         return {
-            "success": True,
-            "user_id": user_id,
             "memories": memories
         }
     except Exception as e:
@@ -311,7 +289,7 @@ def delete_memory(memory_id: str) -> Dict[str, Any]:
 def check_for_duplicates(
     user_id: int,
     content: str,
-    threshold: float = MEMORY_DUPLICATE_SIMILARITY_THRESHOLD
+    threshold: float = MEMORY_SCORE_THRESHOLD
 ) -> Dict[str, Any]:
     """Check if a similar memory already exists for the user.
 

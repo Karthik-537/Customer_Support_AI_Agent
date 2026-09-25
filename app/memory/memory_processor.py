@@ -1,176 +1,105 @@
-"""Memory processing for filtering, deduplication, and conflict resolution.
+"""Memory extraction using Gemini.
 
-This module processes memory candidates before storage in long-term memory.
+This module uses the LLM to identify useful long-term memory candidates
+from conversation messages.
 """
 
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from app.memory.long_term_memory import (
-    add_memory,
-    check_for_duplicates,
-    deactivate_memory,
-    MEMORY_DUPLICATE_SIMILARITY_THRESHOLD
-)
-from app.memory.memory_extractor import filter_by_importance, LONG_TERM_MEMORY_MIN_IMPORTANCE
+from app.agent.llm import GeminiClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def process_memory_candidate(
-    user_id: int,
-    candidate: Dict[str, Any],
-    source_conversation_id: Optional[str] = None
-) -> Dict[str, Any]:
-    """Process a single memory candidate.
-
-    This function:
-    1. Checks for duplicates
-    2. Handles conflicts (deactivates old conflicting memories)
-    3. Stores the new memory
+def _build_memory_extraction_prompt(user_message: str, response: str) -> str:
+    """Build the system prompt for memory extraction.
 
     Args:
-        user_id: The user ID.
-        candidate: The memory candidate dictionary.
-        source_conversation_id: Optional source conversation ID.
+        user_message: The user's message to analyze.
 
     Returns:
-        Dictionary indicating the result of processing.
+        The extraction prompt.
     """
-    memory_type = candidate.get("type", "fact")
-    content = candidate.get("content", "")
-    importance = candidate.get("importance", 5)
+    return f"""
+You are a long-term memory extractor for a customer-support AI agent.
 
-    # Check for duplicates
-    duplicate_check = check_for_duplicates(user_id, content)
+Analyze the user message and assistant response and decide whether the interaction contains information worth remembering for future conversations.
 
-    if duplicate_check.get("is_duplicate"):
-        duplicates = duplicate_check.get("duplicates", [])
+USER MESSAGE:
+{user_message}
 
-        # Check for conflicts (same type, different content)
-        conflicting = [
-            d for d in duplicates
-            if d.get("memory_type") == memory_type
-            and d.get("content") != content
-        ]
+ASSISTANT RESPONSE:
+{response}
 
-        if conflicting:
-            # Deactivate conflicting memories
-            for conflict in conflicting:
-                conflict_id = conflict.get("memory_id")
-                if conflict_id:
-                    deactivate_memory(conflict_id)
-                    logger.info(f"Deactivated conflicting memory {conflict_id}")
+Store a memory ONLY when the information is:
+- User-specific
+- Useful in future conversations
+- Likely to remain relevant over time
+- Explicitly stated or clearly supported by the user
 
-            # Store new memory
-            result = add_memory(
-                user_id=user_id,
-                memory_type=memory_type,
-                content=content,
-                importance=importance,
-                source_conversation_id=source_conversation_id
-            )
+Do NOT store:
+- Temporary issues or one-time requests
+- Order IDs, ticket IDs, or other temporary details
+- Greetings or normal conversation
+- General product/company information
+- Information inferred only by the assistant
+- Information that is unlikely to help in a future conversation
 
-            return {
-                "status": "updated",
-                "deactivated_count": len(conflicting),
-                "new_memory": result
-            }
-        else:
-            # Exact duplicate, skip
-            logger.info(f"Skipping duplicate memory for user {user_id}")
-            return {
-                "status": "skipped",
-                "reason": "duplicate"
-            }
+If suitable, create a short, clear, self-contained memory.
+If multiple independent facts are worth remembering, create separate memories.
 
-    # No duplicates, store new memory
-    result = add_memory(
-        user_id=user_id,
-        memory_type=memory_type,
-        content=content,
-        importance=importance,
-        source_conversation_id=source_conversation_id
-    )
+Return ONLY valid JSON:
 
-    return {
-        "status": "created",
-        "new_memory": result
-    }
-
-
-def process_memory_candidates(
-    user_id: int,
-    candidates: List[Dict[str, Any]],
-    source_conversation_id: Optional[str] = None,
-    min_importance: int = LONG_TERM_MEMORY_MIN_IMPORTANCE
-) -> Dict[str, Any]:
-    """Process multiple memory candidates.
-
-    Args:
-        user_id: The user ID.
-        candidates: List of memory candidates.
-        source_conversation_id: Optional source conversation ID.
-        min_importance: Minimum importance score threshold.
-
-    Returns:
-        Dictionary containing processing results.
-    """
-    # Filter by importance
-    filtered = filter_by_importance(candidates, min_importance)
-
-    if not filtered:
-        return {
-            "success": True,
-            "processed": 0,
-            "created": 0,
-            "updated": 0,
-            "skipped": 0,
-            "candidates": []
+{
+    "memories": [
+        {
+            "content": "..."
         }
+    ]
+}
 
-    results = []
-    created_count = 0
-    updated_count = 0
-    skipped_count = 0
+If nothing is suitable for long-term memory:
 
-    from app.rag.qdrant_store import create_collection, get_collection_info
-    from app.memory.long_term_memory import MEMORY_COLLECTION
+{
+    "memories": []
+}
+"""
 
-    collection_info = get_collection_info(MEMORY_COLLECTION)
-    if not collection_info:
-        from app.rag.ingest import EMBEDDING_MODEL
-        from app.rag.embeddings import get_embedding_dimension
 
-        embedding_dim = get_embedding_dimension(EMBEDDING_MODEL)
-        create_collection(
-            collection_name=MEMORY_COLLECTION,
-            vector_size=embedding_dim,
-            recreate=False
+def add_long_term_memories(
+        user_message: str, response: str, user_id: int) -> List[Dict[str, Any]]:
+    """Extract long-term memory candidates from a user message.
+
+    Args:
+        user_message: The user's message to analyze.
+        response: The llm response
+        user_id: user's id
+
+    Returns:
+        List of memory candidate dictionaries, or empty list if extraction fails.
+    """
+    try:
+        prompt = _build_memory_extraction_prompt(user_message=user_message, response=response)
+
+        client = GeminiClient()
+        response = client.generate_response(
+            contents=[], prompt=prompt, response_type="application/json"
         )
-    for candidate in filtered:
-        result = process_memory_candidate(user_id, candidate, source_conversation_id)
-        results.append(result)
+        text = response["text"]
+        memory_data = json.loads(text) if text else {}
+        memories = memory_data.get("memories")
+        from app.memory.long_term_memory import add_memory
+        if memories:
+            for mem in memories:
+                content = mem.get("content")
+                add_memory(
+                    user_id=user_id,
+                    content=content
+                )
+    except Exception as e:
+        logger.error(f"Error during memory extraction: {e}")
+        return []
 
-        status = result.get("status")
-        if status == "created":
-            created_count += 1
-        elif status == "updated":
-            updated_count += 1
-        elif status == "skipped":
-            skipped_count += 1
-
-    logger.info(
-        f"Processed {len(filtered)} candidates: "
-        f"{created_count} created, {updated_count} updated, {skipped_count} skipped"
-    )
-
-    return {
-        "success": True,
-        "processed": len(filtered),
-        "created": created_count,
-        "updated": updated_count,
-        "skipped": skipped_count,
-        "results": results
-    }

@@ -237,25 +237,6 @@ def get_messages(
         db.close()
 
 
-def get_recent_messages(
-    conversation_id: str,
-    limit: int = 10
-) -> List[Dict[str, Any]]:
-    """Get recent messages from a conversation.
-
-    Args:
-        conversation_id: The conversation ID.
-        limit: Maximum number of recent messages.
-
-    Returns:
-        List of message dictionaries.
-    """
-    result = get_messages(conversation_id, limit=limit)
-    if result["success"]:
-        return result["messages"]
-    return []
-
-
 def update_conversation(
     conversation_id: str,
     title: Optional[str] = None

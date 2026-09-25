@@ -7,14 +7,11 @@ import logging
 from typing import Any, Dict, Optional
 from google.genai import types
 from app.agent.llm import GeminiClient, get_gemini_client
-from app.agent.prompts import get_system_prompt
-from app.agent.rag_interface import format_rag_context
 from app.agent.tool_registry import execute_tool
 from app.agent.tool_schemas import get_tool_schemas
 from app.memory.context_builder import build_context
 from app.memory.conversation_memory import add_conversation_message, get_or_create_conversation
-from app.memory.memory_extractor import extract_memory_candidates
-from app.memory.memory_processor import process_memory_candidates
+from app.memory.memory_processor import add_long_term_memories
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,11 +24,10 @@ class CustomerSupportAgent:
         """Initialize the customer support agent.
 
         Args:
-            ollama_client: Optional Ollama client. If not provided, a default one will be created.
+            gemini_client: Optional Gemini client. If not provided, a default one will be created.
         """
         self.llm_client = gemini_client or get_gemini_client()
         self.tool_schemas = get_tool_schemas()
-        self.system_prompt = get_system_prompt()
         logger.info("Initialized CustomerSupportAgent")
 
     def process_message(
@@ -64,15 +60,12 @@ class CustomerSupportAgent:
         active_conversation_id = conv_result["conversation_id"]
 
         # Step 2: Build context with long-term and short-term memory
-        context = build_context(
-            system_prompt=self.system_prompt,
+        memory_content = build_context(
             user_id=user_id,
             conversation_id=active_conversation_id,
             user_message=user_message,
-            include_long_term_memory=True
         )
-        contents = [
-            types.Content(
+        contents = [types.Content(
                 role="user", parts=[types.Part(text=user_message)]
             )
         ]
@@ -87,7 +80,7 @@ class CustomerSupportAgent:
             # Get response from LLM
             try:
                 response = self.llm_client.generate_response(
-                    contents=contents, tools=self.tool_schemas
+                    contents=contents, tools=self.tool_schemas, memory_content=memory_content
                 )
             except Exception as e:
                 logger.error(f"Error calling LLM: {e}")
@@ -110,15 +103,13 @@ class CustomerSupportAgent:
                 final_response = response["text"]
                 add_conversation_message(active_conversation_id, user_message, final_response)
 
-                # Step 5: Extract and process long-term memory (non-blocking)
+                # Step 5: Add long-term memories
                 try:
-                    candidates = extract_memory_candidates(user_message)
-                    if candidates:
-                        process_memory_candidates(
-                            user_id=user_id,
-                            candidates=candidates,
-                            source_conversation_id=active_conversation_id
-                        )
+                    add_long_term_memories(
+                        user_message=user_message,
+                        response=final_response,
+                        user_id=user_id
+                    )
                 except Exception as e:
                     logger.warning(f"Memory extraction failed (non-blocking): {e}")
 
@@ -127,8 +118,7 @@ class CustomerSupportAgent:
                     "response": final_response,
                     "tool_calls": [],
                     "iterations": iteration,
-                    "conversation_id": active_conversation_id,
-                    "long_term_memories_used": len(context.get("long_term_memories", []))
+                    "conversation_id": active_conversation_id
                 }
 
             # Execute tool calls

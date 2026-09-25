@@ -5,9 +5,9 @@ recent conversation messages, and the current user message.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Dict
 
-from app.memory.conversation_memory import get_recent_messages
+from app.memory.conversation_memory import get_messages
 from app.memory.long_term_memory import search_memories, LONG_TERM_MEMORY_TOP_K
 
 logging.basicConfig(level=logging.INFO)
@@ -18,83 +18,34 @@ CONVERSATION_HISTORY_LIMIT = 10
 
 
 def build_context(
-    system_prompt: str,
     user_id: int,
     conversation_id: str,
     user_message: str,
-    include_long_term_memory: bool = True
-) -> Dict[str, Any]:
+) -> Dict[str, list]:
     """Build the complete context for the agent.
 
     Args:
-        system_prompt: The system prompt/instructions.
         user_id: The user ID.
         conversation_id: The conversation ID.
         user_message: The current user message.
-        include_long_term_memory: Whether to include long-term memory.
 
     Returns:
         Dictionary containing the built context.
     """
-
-    messages = [
-        {"role": "system", "content": system_prompt}
-    ]
-
-    long_term_memories = []
-    if include_long_term_memory:
-        memory_result = search_memories(user_id, user_message, top_k=LONG_TERM_MEMORY_TOP_K)
-        if memory_result.get("success"):
-            long_term_memories = memory_result.get("memories", [])
-
-    if long_term_memories:
-        memory_context = "USER PREFERENCES AND CONTEXT:\n"
-        for memory in long_term_memories:
-            memory_context += f"- {memory.get('content')}\n"
-        messages.append({"role": "system", "content": memory_context})
-        logger.info(f"Included {len(long_term_memories)} long-term memories")
+    memory_result = search_memories(user_id, user_message, top_k=LONG_TERM_MEMORY_TOP_K)
+    long_term_memories = memory_result.get("memories", [])
 
     # Recent conversation messages
-    recent_messages = get_recent_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
-
-    # Convert stored exchanges back into the role-based format expected by the LLM.
-    for msg in recent_messages:
-        messages.append({"role": "user", "content": msg.get("user_message", "")})
-        messages.append({"role": "assistant", "content": msg.get("response", "")})
-
-    # Add current user message
-    messages.append({
-        "role": "user",
-        "content": user_message
-    })
-
-    return {
-        "system_prompt": system_prompt,
-        "long_term_memories": long_term_memories,
-        "conversation_messages": recent_messages,
-        "messages": messages,
-        "user_message": user_message
+    conversation_memories = get_messages(conversation_id, limit=CONVERSATION_HISTORY_LIMIT)
+    memories = conversation_memories["messages"]
+    short_term_memories = []
+    for mem in memories:
+        short_term_memories.append({
+            "user": mem["user_message"],
+            "ai_response": mem["response"]
+        })
+    memory_content = {
+        "short_term_memories": short_term_memories,
+        "long_term_memories": long_term_memories
     }
-
-
-def format_context_summary(context: Dict[str, Any]) -> str:
-    """Format a human-readable summary of the context.
-
-    Args:
-        context: The context dictionary from build_context.
-
-    Returns:
-        A formatted string summary.
-    """
-    parts = []
-
-    parts.append(f"User message: {context.get('user_message', '')}")
-    parts.append(f"Conversation messages: {len(context.get('conversation_messages', []))}")
-    parts.append(f"Long-term memories: {len(context.get('long_term_memories', []))}")
-
-    if context.get('long_term_memories'):
-        parts.append("\nLong-term memory details:")
-        for memory in context['long_term_memories']:
-            parts.append(f"  - {memory.get('content')} (score: {memory.get('score', 0):.2f})")
-
-    return "\n".join(parts)
+    return memory_content

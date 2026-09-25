@@ -7,13 +7,4 @@ customer_support.db
 .idea/
 .vscode/
 app/database/seed.py
-tests/test_database.py
-tests/test_tools.py
-tests/manual_agent_test.py
-tests/manual_rag_test.py
-tests/test_agent.py
-tests/test_rag.py
-tests/test_ollama_integration.py
 create_sample_pdfs.py
-tests/manual_test_agent_rag.py
-tests/test_agent_rag.py

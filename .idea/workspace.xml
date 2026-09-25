@@ -10,10 +10,12 @@
     <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/agent/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/rag_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/rag_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/llm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/prompts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/context_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/context_builder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/memory/long_term_memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/long_term_memory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/rag/qdrant_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/qdrant_store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/rag/rag_answer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/rag/rag_answer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/memory_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/memory/memory_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_processor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -356,7 +358,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790321794700</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Rag bug fixes">
+      <option name="closed" value="true" />
+      <created>1790335741763</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1790335741763</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -383,6 +393,7 @@
     <MESSAGE value="Shifted from Ollama to Gemini model" />
     <MESSAGE value="Minor Change" />
     <MESSAGE value="Bug fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bug fix" />
+    <MESSAGE value="Rag bug fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Rag bug fixes" />
   </component>
 </project>
