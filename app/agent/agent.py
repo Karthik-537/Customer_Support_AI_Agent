@@ -105,13 +105,8 @@ class CustomerSupportAgent:
             if not tool_calls:
                 # No tool calls, this is the final response
                 logger.info("No tool calls requested, returning final response")
-                text_parts = []
 
-                for part in contents[0].parts:
-                    if part.text:
-                        text_parts.append(part.text)
-
-                final_response = "".join(text_parts)
+                final_response = response["text"]
                 add_conversation_message(active_conversation_id, user_message, final_response)
 
                 # Step 5: Extract and process long-term memory (non-blocking)

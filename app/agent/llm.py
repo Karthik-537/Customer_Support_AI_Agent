@@ -49,7 +49,7 @@ class GeminiClient:
             logger.info("Sending request to Gemini with %s messages", len(contents))
             if tools:
                 logger.info("Providing %s tools to Gemini", len(tools))
-            from prompts import get_system_prompt
+            from app.agent.prompts import get_system_prompt
 
             system_instruction = get_system_prompt() if not prompt else prompt
             config = types.GenerateContentConfig(
@@ -97,6 +97,7 @@ class GeminiClient:
         return {
             "contents": contents.append(response.candidates[0].content),
             "tool_calls": tool_calls,
+            "text": response.text if response.text else ""
         }
 
 
