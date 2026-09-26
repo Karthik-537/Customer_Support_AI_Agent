@@ -13,8 +13,6 @@ from app.tools.order_tools import (
     cancel_order,
     check_order_cancellation,
     get_my_orders,
-    get_order_details,
-    get_order_status,
     get_orders_by_product_name,
 )
 from app.tools.ticket_tools import (
@@ -29,7 +27,6 @@ TOOL_REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {
     "check_order_cancellation": check_order_cancellation,
     "get_my_orders": get_my_orders,
     "get_orders_by_product_name": get_orders_by_product_name,
-    "cancel_order": cancel_order,
     "check_product_by_name": check_product_by_name,
     "create_support_ticket": create_support_ticket,
     "get_support_tickets_by_product_name": get_support_tickets_by_product_name,

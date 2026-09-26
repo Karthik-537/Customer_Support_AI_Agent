@@ -56,31 +56,20 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "check_order_cancellation",
-                "description": "Check whether the current order can be cancelled without changing the database state.",
+                "description": "Check whether the customer's matching order(s) are eligible for \
+                cancellation based on their current status. This is a read-only operation and \
+                does not modify the database.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "order_id": {
+                        "customer_id": {
                             "type": "string",
-                            "description": "Internal UUID of the order to evaluate"
-                        }
-                    },
-                    "required": ["order_id"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "cancel_order",
-                "description": "Cancel a specific order by internal UUID only after the backend revalidates that the current state is cancellable.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "order_id": {
+                            "description": "Internal application customer ID for the customer whose orders are being searched"
+                        },
+                        "product_name": {
                             "type": "string",
-                            "description": "Internal UUID of the order to cancel"
-                        }
+                            "description": "Product name or partial product name to match against the customer's order history"
+                        },
                     },
                     "required": ["order_id"]
                 }
@@ -90,7 +79,7 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "check_product_by_name",
-                "description": "Search product by a product name, supporting case-insensitive and partial matching. Returns all relevant products instead of a single product.",
+                "description": "Search for products by name using case-insensitive and partial matching to determine their current stock availability. Returns all matching products and their stock quantities.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -107,17 +96,40 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "create_support_ticket",
-                "description": "Create a support ticket for a customer using the customer's product-name match to the relevant order. If multiple matching orders exist, the tool must ask for clarification instead of creating a ticket automatically.",
+                "description": (
+                    "Create a support ticket for a customer using the customer's "
+                    "product-name match to the relevant order. If multiple matching "
+                    "orders exist, the tool must ask for clarification instead of "
+                    "creating a ticket automatically. If the customer identifies "
+                    "the specific order by its order date, use order_date to select "
+                    "that order."
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "customer_id": {
                             "type": "string",
-                            "description": "Internal application customer ID for the customer creating the ticket"
+                            "description": (
+                                "Internal application customer ID for the customer "
+                                "creating the ticket"
+                            )
                         },
                         "product_name": {
                             "type": "string",
-                            "description": "Product name to match against the customer's orders before creating the ticket"
+                            "description": (
+                                "Product name to match against the customer's "
+                                "orders before creating the ticket"
+                            )
+                        },
+                        "order_date": {
+                            "type": "string",
+                            "description": (
+                                "Optional order date used to identify the specific "
+                                "order when multiple orders exist for the same "
+                                "product. Provide the date only when needed to "
+                                "disambiguate multiple matching orders."
+                                "Format: YYYY-MM-DD"
+                            )
                         },
                         "issue": {
                             "type": "string",
@@ -125,11 +137,23 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                         },
                         "priority": {
                             "type": "string",
-                            "description": "The priority level (LOW, MEDIUM, HIGH, CRITICAL). Defaults to MEDIUM.",
-                            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                            "description": (
+                                "The priority level (LOW, MEDIUM, HIGH, CRITICAL). "
+                                "Defaults to MEDIUM."
+                            ),
+                            "enum": [
+                                "LOW",
+                                "MEDIUM",
+                                "HIGH",
+                                "CRITICAL"
+                            ]
                         }
                     },
-                    "required": ["customer_id", "product_name", "issue"]
+                    "required": [
+                        "customer_id",
+                        "product_name",
+                        "issue"
+                    ]
                 }
             }
         },

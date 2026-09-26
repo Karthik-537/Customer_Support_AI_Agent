@@ -4,7 +4,8 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, Column, Date, Enum as SqlEnum, \
+    Float, ForeignKey, Integer, String, Text, DateTime
 from sqlalchemy.orm import relationship
 
 from app.database.db import Base
@@ -82,8 +83,8 @@ class Order(Base):
     product_name = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
     status = Column(SqlEnum(OrderStatus, native_enum=False), nullable=False)
-    order_date = Column(DateTime, nullable=False, default=utc_now)
-    delivery_date = Column(DateTime, nullable=True)
+    order_date = Column(Date, nullable=False, default=utc_now)
+    delivery_date = Column(Date, nullable=True)
 
     customer = relationship("Customer", back_populates="orders")
     product = relationship("Product", back_populates="orders")

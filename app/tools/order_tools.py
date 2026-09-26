@@ -110,45 +110,100 @@ def get_order_status(order_id: str) -> dict[str, Any]:
     return get_order_details(order_id)
 
 
-def check_order_cancellation(order_id: str) -> dict[str, Any]:
-    """Determine whether the current order can be cancelled."""
-    db: Session = SessionLocal()
-    try:
-        order = db.query(Order).filter(Order.id == order_id).first()
-        if order is None:
-            return {"success": False, "can_cancel": False, "reason": "Order not found"}
+from typing import Any
 
-        status = _status_value(order.status)
-        if status in {OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value}:
+from sqlalchemy.orm import Session
+from app.database.db import SessionLocal
+from app.database.models import Order, OrderStatus
+
+
+def check_order_cancellation(
+    customer_id: str,
+    product_name: str,
+) -> dict[str, Any]:
+    """Check whether matching customer orders can be cancelled."""
+
+    query = (product_name or "").strip()
+
+    if not query:
+        return {
+            "success": False,
+            "reason": "Product name is required",
+        }
+
+    db: Session = SessionLocal()
+
+    try:
+        orders = (
+            db.query(Order)
+            .filter(
+                Order.customer_id == customer_id,
+                Order.product_name.ilike(f"%{query}%"),
+            )
+            .order_by(Order.order_date.desc())
+            .all()
+        )
+
+        if not orders:
             return {
-                "success": True,
-                "can_cancel": True,
-                "reason": "Order has not been shipped yet.",
-                "status": status,
+                "success": False,
+                "reason": "No matching order found.",
             }
-        if status == OrderStatus.CANCELLED.value:
-            return {
-                "success": True,
-                "can_cancel": False,
-                "reason": "Order has already been cancelled.",
-                "status": status,
-            }
-        if status in {OrderStatus.SHIPPED.value, OrderStatus.DELIVERED.value}:
-            return {
-                "success": True,
-                "can_cancel": False,
-                "reason": f"Order has already been {status.lower()}.",
-                "status": status,
-            }
+
+        results = []
+
+        for order in orders:
+            status = (
+                order.status.value
+                if hasattr(order.status, "value")
+                else str(order.status)
+            )
+            if status in {
+                OrderStatus.PENDING.value,
+                OrderStatus.CONFIRMED.value,
+            }:
+                can_cancel = True
+                reason = "Order has not been shipped yet."
+            elif status == OrderStatus.CANCELLED.value:
+                can_cancel = False
+                reason = "Order has already been cancelled."
+            elif status == OrderStatus.SHIPPED.value:
+                can_cancel = False
+                reason = "Order has already been shipped."
+            elif status == OrderStatus.DELIVERED.value:
+                can_cancel = False
+                reason = "Order has already been delivered."
+            else:
+                can_cancel = False
+                reason = (
+                    f"Order cannot be cancelled in its current state: "
+                    f"{status}."
+                )
+
+            results.append(
+                {
+                    "product_name": order.product_name,
+                    "order_date": (
+                        order.order_date.date().isoformat()
+                        if order.order_date
+                        else None
+                    ),
+                    "quantity": order.quantity,
+                    "status": status,
+                    "can_cancel": can_cancel,
+                    "reason": reason,
+                }
+            )
         return {
             "success": True,
-            "can_cancel": False,
-            "reason": f"Order cannot be cancelled in its current state: {status}.",
-            "status": status,
+            "product_name": query,
+            "orders": results,
         }
-    except Exception as exc:  # pragma: no cover - defensive
-        db.rollback()
-        return {"success": False, "can_cancel": False, "reason": f"Database error: {str(exc)}"}
+    except Exception as exc:
+        return {
+            "success": False,
+            "reason": f"Database error: {str(exc)}",
+        }
     finally:
         db.close()
 

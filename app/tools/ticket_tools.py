@@ -5,11 +5,12 @@ This module provides functions to create and query support tickets in SQLite.
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
 from app.database.db import SessionLocal
+from datetime import datetime
 from app.database.models import (
     Customer,
     Order,
@@ -19,24 +20,35 @@ from app.database.models import (
 )
 
 
-def _build_ticket_reference(ticket_id: str) -> str:
-    """Generate a customer-safe ticket reference."""
-    return f"TKT-{str(ticket_id)[:8].upper()}" if ticket_id else "TKT-UNKNOWN"
-
-
 def _get_matching_customer_orders(
     db: Session,
     customer_id: str,
     product_name: str,
+    order_date: Optional[str] = None,
 ):
-    """Find all orders for the customer matching the product name."""
+    """Find customer orders matching the product name and optionally order date."""
 
-    return (
+    query = (
         db.query(Order)
         .filter(
             Order.customer_id == customer_id,
             Order.product_name.ilike(f"%{product_name}%"),
         )
+    )
+
+    if order_date:
+        try:
+            order_date = datetime.strptime(order_date, "%Y-%m-%d")
+        except ValueError:
+            return {
+                "success": False,
+                "error": "INVALID_DATE_FORMAT",
+                "message": "Order date must be in YYYY-MM-DD format.",
+            }
+        query = query.filter(Order.order_date == order_date)
+
+    return (
+        query
         .order_by(Order.order_date.desc())
         .all()
     )
@@ -49,7 +61,6 @@ def _build_ticket_payload(
     """Build a customer-safe ticket response."""
 
     payload = {
-        "ticket_reference": _build_ticket_reference(ticket.id),
         "product_name": product_name,
         "issue": ticket.issue,
         "priority": (
@@ -89,6 +100,7 @@ def create_support_ticket(
     product_name: str,
     issue: str,
     priority: str = "MEDIUM",
+    order_date: Optional[str] = None
 ) -> dict[str, Any]:
     """Create a support ticket for a customer's product order."""
 
@@ -130,9 +142,10 @@ def create_support_ticket(
             }
 
         matches = _get_matching_customer_orders(
-            db,
-            customer_id,
-            query,
+            db=db,
+            customer_id=customer_id,
+            product_name=query,
+            order_date=order_date
         )
 
         if not matches:
@@ -158,18 +171,7 @@ def create_support_ticket(
                             order.order_date.isoformat()
                             if order.order_date
                             else None
-                        ),
-                        "quantity": order.quantity,
-                        "status": (
-                            order.status.value
-                            if hasattr(order.status, "value")
-                            else str(order.status)
-                        ),
-                        "delivery_date": (
-                            order.delivery_date.isoformat()
-                            if order.delivery_date
-                            else None
-                        ),
+                        )
                     }
                     for order in matches
                 ],
@@ -196,7 +198,6 @@ def create_support_ticket(
 
         return {
             "success": True,
-            "ticket_reference": _build_ticket_reference(ticket.id),
             "product_name": selected_order.product_name,
             "issue": ticket.issue,
             "priority": ticket.priority.value,
