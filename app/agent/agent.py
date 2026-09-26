@@ -33,7 +33,7 @@ class CustomerSupportAgent:
     def process_message(
         self,
         user_message: str,
-        user_id: int,
+        user_id: str,
         conversation_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process a user message through the agent with memory support.
@@ -80,7 +80,8 @@ class CustomerSupportAgent:
             # Get response from LLM
             try:
                 response = self.llm_client.generate_response(
-                    contents=contents, tools=self.tool_schemas, memory_content=memory_content
+                    contents=contents, tools=self.tool_schemas, memory_content=memory_content,
+                    user_id=user_id
                 )
             except Exception as e:
                 logger.error(f"Error calling LLM: {e}")

@@ -45,7 +45,7 @@ def get_customers() -> list[dict[str, Any]]:
     return _request("GET", "/api/customers")
 
 
-def create_conversation(user_id: int, title: str = "New Conversation") -> dict[str, Any]:
+def create_conversation(user_id: str, title: str = "New Conversation") -> dict[str, Any]:
     """Create a new conversation for a customer."""
     return _request("POST", "/api/conversations", json={"user_id": user_id, "title": title})
 
@@ -55,7 +55,7 @@ def get_conversation(conversation_id: str) -> dict[str, Any]:
     return _request("GET", f"/api/conversations/{conversation_id}")
 
 
-def get_conversations(user_id: int) -> list[dict[str, Any]]:
+def get_conversations(user_id: str) -> list[dict[str, Any]]:
     """Return all conversations for the selected customer."""
     result = _request("GET", f"/api/users/{user_id}/conversations")
     return result.get("conversations", [])
@@ -67,7 +67,7 @@ def get_messages(conversation_id: str) -> list[dict[str, Any]]:
     return result.get("messages", [])
 
 
-def send_message(user_id: int, message: str, conversation_id: Optional[str] = None) -> dict[str, Any]:
+def send_message(user_id: str, message: str, conversation_id: Optional[str] = None) -> dict[str, Any]:
     """Send a user message to the backend agent."""
     payload = {"user_id": user_id, "message": message}
     if conversation_id:
@@ -75,11 +75,11 @@ def send_message(user_id: int, message: str, conversation_id: Optional[str] = No
     return _request("POST", "/api/chat", json=payload)
 
 
-def rename_conversation(conversation_id: str, user_id: int, title: str) -> dict[str, Any]:
+def rename_conversation(conversation_id: str, user_id: str, title: str) -> dict[str, Any]:
     """Rename a conversation."""
     return _request("PATCH", f"/api/conversations/{conversation_id}", json={"user_id": user_id, "title": title})
 
 
-def delete_conversation(conversation_id: str, user_id: int) -> dict[str, Any]:
+def delete_conversation(conversation_id: str, user_id: str) -> dict[str, Any]:
     """Delete a conversation."""
     return _request("DELETE", f"/api/conversations/{conversation_id}", params={"user_id": user_id})

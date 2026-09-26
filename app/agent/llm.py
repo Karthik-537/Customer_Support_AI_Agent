@@ -35,6 +35,7 @@ class GeminiClient:
 
     def generate_response(
         self, contents: List | str,
+        user_id: str,
         memory_content: Optional[Dict[str, list]] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,
@@ -60,7 +61,8 @@ class GeminiClient:
 
             system_instruction = get_system_prompt(
                 short_term_memories=memory_content["short_term_memories"],
-                long_term_memories=memory_content["long_term_memories"]
+                long_term_memories=memory_content["long_term_memories"],
+                user_id = user_id
             ) if not prompt else prompt
             config = types.GenerateContentConfig(
                 system_instruction=system_instruction or None,

@@ -23,7 +23,7 @@ def generate_conversation_id() -> str:
 
 
 def create_conversation(
-    user_id: int,
+    user_id: str,
     title: str = "New Conversation",
     conversation_id: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -103,7 +103,7 @@ def get_conversation(conversation_id: str) -> Dict[str, Any]:
 
 
 def get_or_create_conversation(
-    user_id: int,
+    user_id: str,
     conversation_id: Optional[str] = None,
     title: str = "New Conversation"
 ) -> Dict[str, Any]:
@@ -314,7 +314,7 @@ def delete_conversation(conversation_id: str) -> Dict[str, Any]:
         db.close()
 
 
-def list_user_conversations(user_id: int) -> Dict[str, Any]:
+def list_user_conversations(user_id: str) -> Dict[str, Any]:
     """List all conversations for a user.
 
     Args:

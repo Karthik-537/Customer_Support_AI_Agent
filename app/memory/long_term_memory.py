@@ -84,7 +84,7 @@ def generate_memory_id() -> str:
 
 
 def add_memory(
-    user_id: int,
+    user_id: str,
     content: str
 ) -> Dict[str, Any]:
     """Add a long-term memory for a user.
@@ -135,7 +135,7 @@ def add_memory(
 
 
 def search_memories(
-    user_id: int,
+    user_id: str,
     query: str,
     top_k: int = LONG_TERM_MEMORY_TOP_K
 ) -> Dict[str, Any]:
@@ -287,7 +287,7 @@ def delete_memory(memory_id: str) -> Dict[str, Any]:
 
 
 def check_for_duplicates(
-    user_id: int,
+    user_id: str,
     content: str,
     threshold: float = MEMORY_SCORE_THRESHOLD
 ) -> Dict[str, Any]:

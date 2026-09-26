@@ -18,7 +18,7 @@ CONVERSATION_HISTORY_LIMIT = 10
 
 
 def build_context(
-    user_id: int,
+    user_id: str,
     conversation_id: str,
     user_message: str,
 ) -> Dict[str, list]:

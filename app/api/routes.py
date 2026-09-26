@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 
 
-def _ensure_conversation_owned(conversation_id: str, user_id: int) -> dict[str, Any]:
+def _ensure_conversation_owned(conversation_id: str, user_id: str) -> dict[str, Any]:
     """Validate that the conversation exists and belongs to the requested user."""
     conv = get_conversation(conversation_id)
     if not conv.get("success"):
@@ -132,7 +132,7 @@ def get_conversation_messages(conversation_id: str) -> MessagesResponse:
 
 
 @router.get("/users/{user_id}/conversations", response_model=ConversationsListResponse)
-def list_conversations_for_user(user_id: int) -> ConversationsListResponse:
+def list_conversations_for_user(user_id: str) -> ConversationsListResponse:
     """Return all conversations for the specified customer."""
     result = list_user_conversations(user_id)
     if not result.get("success"):
@@ -177,7 +177,7 @@ def update_conversation_metadata(conversation_id: str, payload: ConversationUpda
 
 
 @router.delete("/conversations/{conversation_id}")
-def delete_conversation_by_id(conversation_id: str, user_id: int = Query(..., description="Customer ID that owns the conversation")) -> dict[str, Any]:
+def delete_conversation_by_id(conversation_id: str, user_id: str = Query(..., description="Customer ID that owns the conversation")) -> dict[str, Any]:
     """Delete a conversation and its messages."""
     _ensure_conversation_owned(conversation_id, user_id)
 

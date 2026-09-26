@@ -5,6 +5,7 @@ This module defines the system prompt used during inference.
 
 
 def get_system_prompt(
+    user_id: str,
     short_term_memories: list[str] | None = None,
     long_term_memories: list[str] | None = None,
 ) -> str:
@@ -24,6 +25,7 @@ def get_system_prompt(
     long_term_memories = long_term_memories or []
 
     return f"""You are a customer support AI agent.
+Current customer ID: {user_id}
 
 Your job is to help customers with orders, inventory,
 support tickets, and general customer-support requests.

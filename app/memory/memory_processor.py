@@ -84,7 +84,7 @@ Never invent, infer, or assume user information.
 
 
 def add_long_term_memories(
-        user_message: str, response: str, user_id: int) -> List[Dict[str, Any]]:
+    user_message: str, response: str, user_id: str) -> List[Dict[str, Any]]:
     """Extract long-term memory candidates from a user message.
 
     Args:
@@ -103,7 +103,8 @@ def add_long_term_memories(
 
         client = GeminiClient()
         response = client.generate_response(
-            contents=contents, prompt=prompt, response_type="application/json"
+            contents=contents, prompt=prompt, response_type="application/json",
+            user_id=user_id
         )
         text = response["text"]
         memory_data = json.loads(text) if text else {}
