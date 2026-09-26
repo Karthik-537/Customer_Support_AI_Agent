@@ -15,8 +15,10 @@ from app.frontend.api_client import (
     delete_conversation,
     get_conversation,
     get_conversations,
+    get_current_customer,
     get_customers,
     get_messages,
+    login_customer,
     rename_conversation,
     send_message,
 )
@@ -31,6 +33,54 @@ st.set_page_config(
     page_icon="💬",
     layout="wide",
 )
+
+
+# -----------------------------------------------------------------------------
+# Authentication state helpers
+# -----------------------------------------------------------------------------
+def _ensure_auth_state() -> None:
+    """Initialize the authentication-related session state."""
+    if "access_token" not in st.session_state:
+        st.session_state.access_token = None
+    if "customer" not in st.session_state:
+        st.session_state.customer = None
+    if "customer_id" not in st.session_state:
+        st.session_state.customer_id = None
+
+
+def login_user(email: str, password: str) -> bool:
+    """Authenticate the user and store the JWT in session state."""
+    try:
+        login_result = login_customer(email.strip(), password)
+    except ApiClientError as exc:
+        st.error(str(exc))
+        return False
+
+    token = login_result.get("access_token")
+    if not token:
+        st.error("Login failed: no access token was provided.")
+        return False
+
+    try:
+        customer = get_current_customer(token)
+    except ApiClientError as exc:
+        st.error(str(exc))
+        return False
+
+    st.session_state.access_token = token
+    st.session_state.customer = customer
+    st.session_state.customer_id = customer.get("id")
+    st.session_state.conversation_id = None
+    return True
+
+
+def logout_user() -> None:
+    """Clear authentication state and return to the login screen."""
+    st.session_state.access_token = None
+    st.session_state.customer = None
+    st.session_state.customer_id = None
+    st.session_state.conversation_id = None
+    st.session_state.pop("active_customer_select", None)
 
 
 # -----------------------------------------------------------------------------
@@ -56,9 +106,8 @@ def confirm_delete_conversation(conversation_id: str, conversation_title: str) -
     with delete_col:
         if st.button("Delete", type="primary", use_container_width=True):
             try:
-                delete_conversation(conversation_id, st.session_state.customer_id)
-                if st.session_state.get("conversation_id") == conversation_id:
-                    st.session_state.conversation_id = None
+                delete_conversation(conversation_id, st.session_state.customer_id, token=st.session_state.access_token)
+                st.session_state.conversation_id = None
                 st.session_state.open_conversation_actions = None
                 st.rerun()
             except ApiClientError as exc:
@@ -76,6 +125,7 @@ def rename_conversation_dialog(conversation_id: str, current_title: str) -> None
                     conversation_id,
                     st.session_state.customer_id,
                     new_title.strip(),
+                    token=st.session_state.access_token,
                 )
                 st.rerun()
             except ApiClientError as exc:
@@ -96,6 +146,7 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
                         conversation_id,
                         st.session_state.customer_id,
                         new_title.strip(),
+                        token=st.session_state.access_token,
                     )
                     st.session_state.conversation_action_mode = None
                     st.rerun()
@@ -113,7 +164,7 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
         with delete_col:
             if st.button("Delete", type="primary", use_container_width=True):
                 try:
-                    delete_conversation(conversation_id, st.session_state.customer_id)
+                    delete_conversation(conversation_id, st.session_state.customer_id, token=st.session_state.access_token)
                     if st.session_state.get("conversation_id") == conversation_id:
                         st.session_state.conversation_id = None
                     st.session_state.conversation_action_mode = None
@@ -130,47 +181,39 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
         st.rerun(scope="fragment")
 
 
-# -----------------------------------------------------------------------------
-# Sidebar: Customer Selection & Conversation Navigation
-# -----------------------------------------------------------------------------
-st.sidebar.title("💬 Customer Support AI")
+_ensure_auth_state()
 
-customers = load_customers()
-
-if not customers:
-    st.sidebar.error("No customers found in the backend.")
-    st.sidebar.info("Ensure the FastAPI backend is running and the SQLite data has been seeded.")
+if not st.session_state.access_token or not st.session_state.customer:
     st.title("Customer Support AI")
-    st.warning("No customer records are available from the API. Please start the backend and seed demo data first.")
+    st.subheader("Login")
+
+    with st.form("login_form"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login", use_container_width=True)
+
+        if submitted:
+            if not email or not password:
+                st.error("Email and password are required.")
+            else:
+                if login_user(email, password):
+                    st.rerun()
+
     st.stop()
 
-customer_map = {c["id"]: c for c in customers}
-customer_ids = list(customer_map.keys())
-
-if "customer_id" not in st.session_state or st.session_state.customer_id not in customer_map:
-    st.session_state.customer_id = customer_ids[0]
-
-current_index = customer_ids.index(st.session_state.customer_id)
-
-st.sidebar.caption("Demo Customer Simulation")
-selected_customer_id = st.sidebar.selectbox(
-    "Active Customer",
-    options=customer_ids,
-    format_func=lambda cid: f"{customer_map[cid]['name']} ({customer_map[cid]['email']})",
-    index=current_index,
-    key="active_customer_select",
-)
-
-if selected_customer_id != st.session_state.customer_id:
-    st.session_state.customer_id = selected_customer_id
-    st.session_state.conversation_id = None
-    st.rerun()
-
+# -----------------------------------------------------------------------------
+# Sidebar: Customer-aware Conversation Navigation
+# -----------------------------------------------------------------------------
+st.sidebar.title("💬 Customer Support AI")
+customer = st.session_state.customer
+st.sidebar.caption(f"Logged in as: {customer['name']} ({customer['email']})")
+st.sidebar.button("Logout", use_container_width=True, on_click=logout_user)
 st.sidebar.divider()
+customer_map = {customer["id"]: customer}
 
 if st.sidebar.button("➕ New Conversation", use_container_width=True, type="primary"):
     try:
-        result = create_conversation(st.session_state.customer_id, title="New Conversation")
+        result = create_conversation(st.session_state.customer_id, title="New Conversation", token=st.session_state.access_token)
         if result.get("success"):
             st.session_state.conversation_id = result["conversation_id"]
             st.rerun()
@@ -182,7 +225,7 @@ if st.sidebar.button("➕ New Conversation", use_container_width=True, type="pri
 st.sidebar.subheader("Conversations")
 
 try:
-    conversations = get_conversations(st.session_state.customer_id)
+    conversations = get_conversations(st.session_state.customer_id, token=st.session_state.access_token)
 except ApiClientError as exc:
     logger.error(f"Error loading conversations: {exc}")
     conversations = []
@@ -249,7 +292,7 @@ active_conv_id: Optional[str] = st.session_state.get("conversation_id")
 
 if active_conv_id:
     try:
-        active_conv_info = get_conversation(active_conv_id)
+        active_conv_info = get_conversation(active_conv_id, token=st.session_state.access_token)
     except ApiClientError:
         st.session_state.conversation_id = None
         st.rerun()
@@ -277,7 +320,7 @@ if active_conv_id:
     st.divider()
 
     try:
-        messages_result = get_messages(active_conv_id)
+        messages_result = get_messages(active_conv_id, token=st.session_state.access_token)
         messages = messages_result
     except ApiClientError as exc:
         logger.error(f"Error loading messages: {exc}")
@@ -322,7 +365,7 @@ if user_message:
     if not st.session_state.get("conversation_id"):
         derived_title = user_message.strip()[:35] + ("..." if len(user_message.strip()) > 35 else "")
         try:
-            created = create_conversation(st.session_state.customer_id, title=derived_title)
+            created = create_conversation(st.session_state.customer_id, title=derived_title, token=st.session_state.access_token)
             if created.get("success"):
                 st.session_state.conversation_id = created["conversation_id"]
             else:
@@ -344,6 +387,7 @@ if user_message:
                     user_id=st.session_state.customer_id,
                     message=user_message,
                     conversation_id=conversation_id,
+                    token=st.session_state.access_token,
                 )
                 if response_data:
                     st.markdown(response_data.get("response", ""))

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     """Request payload for a chat interaction."""
 
-    user_id: str = Field(..., description="Internal customer ID that owns the conversation")
+    user_id: Optional[str] = Field(None, description="Deprecated: customer identity is derived from the JWT")
     conversation_id: Optional[str] = Field(None, description="Existing conversation ID for continuing a chat")
     message: str = Field(..., min_length=1, description="Message sent by the customer")
 
@@ -28,10 +28,38 @@ class CustomerSummary(BaseModel):
     email: str
 
 
+class RegisterRequest(BaseModel):
+    """Payload for new customer registration."""
+
+    name: str = Field(..., min_length=1, description="Customer full name")
+    email: str = Field(..., min_length=1, description="Customer email address")
+    password: str = Field(..., min_length=8, description="Customer password")
+
+
+class LoginRequest(BaseModel):
+    """Payload for customer login."""
+
+    email: str = Field(..., min_length=1, description="Customer email address")
+    password: str = Field(..., min_length=1, description="Customer password")
+
+
+class TokenResponse(BaseModel):
+    """JWT login response."""
+
+    access_token: str
+    token_type: str = "bearer"
+
+
+class CustomerCreateRequest(BaseModel):
+    """Request payload for creating a customer conversation."""
+
+    title: Optional[str] = "New Conversation"
+
+
 class ConversationCreateRequest(BaseModel):
     """Request payload for creating a customer conversation."""
 
-    user_id: str
+    user_id: Optional[str] = None
     title: Optional[str] = "New Conversation"
 
 
@@ -52,7 +80,7 @@ class ConversationResponse(BaseModel):
 class ConversationUpdateRequest(BaseModel):
     """Request payload for updating a conversation."""
 
-    user_id: str
+    user_id: Optional[str] = None
     title: Optional[str] = None
 
 

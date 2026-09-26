@@ -3,9 +3,11 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.agent.agent import get_agent
+from app.auth.dependencies import get_current_customer
+from app.auth.service import login_customer_account, register_customer_account
 from app.database.db import SessionLocal
 from app.database.models import Customer
 from app.memory.conversation_memory import (
@@ -25,8 +27,11 @@ from app.api.schemas import (
     ConversationsListResponse,
     CustomerSummary,
     HealthResponse,
+    LoginRequest,
     MessageRecord,
     MessagesResponse,
+    RegisterRequest,
+    TokenResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,6 +54,24 @@ def health_check() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
+@router.post("/auth/register", response_model=CustomerSummary)
+def register_customer(payload: RegisterRequest) -> CustomerSummary:
+    """Register a new customer account using email and password."""
+    return register_customer_account(payload)
+
+
+@router.post("/auth/login", response_model=TokenResponse)
+def login_customer(payload: LoginRequest) -> TokenResponse:
+    """Authenticate a customer by email and password and return a JWT."""
+    return login_customer_account(payload)
+
+
+@router.get("/auth/me", response_model=CustomerSummary)
+def get_me(current_customer: Customer = Depends(get_current_customer)) -> CustomerSummary:
+    """Return the authenticated customer's safe public profile."""
+    return CustomerSummary(id=current_customer.id, name=current_customer.name, email=current_customer.email)
+
+
 @router.get("/customers", response_model=list[CustomerSummary])
 def get_customers() -> list[CustomerSummary]:
     """Return the customer list for the frontend demo selector."""
@@ -67,10 +90,13 @@ def get_customers() -> list[CustomerSummary]:
 
 
 @router.post("/conversations", response_model=ConversationResponse)
-def create_new_conversation(payload: ConversationCreateRequest) -> ConversationResponse:
-    """Create a new conversation for a customer."""
+def create_new_conversation(payload: ConversationCreateRequest, current_customer: Customer = Depends(get_current_customer)) -> ConversationResponse:
+    """Create a new conversation for the authenticated customer."""
+    user_id = payload.user_id or current_customer.id
+    if user_id != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot create conversation for another customer")
     try:
-        result = create_conversation(payload.user_id, title=payload.title or "New Conversation")
+        result = create_conversation(user_id, title=payload.title or "New Conversation")
     except Exception as exc:
         logger.exception("Failed to create conversation")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create conversation") from exc
@@ -82,7 +108,7 @@ def create_new_conversation(payload: ConversationCreateRequest) -> ConversationR
         success=True,
         conversation_id=result["conversation_id"],
         id=result.get("id"),
-        user_id=payload.user_id,
+        user_id=user_id,
         title=result.get("title"),
         created_at=result.get("created_at"),
         updated_at=result.get("created_at"),
@@ -91,11 +117,13 @@ def create_new_conversation(payload: ConversationCreateRequest) -> ConversationR
 
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationResponse)
-def get_conversation_by_id(conversation_id: str) -> ConversationResponse:
+def get_conversation_by_id(conversation_id: str, current_customer: Customer = Depends(get_current_customer)) -> ConversationResponse:
     """Return metadata for a specific conversation."""
     result = get_conversation(conversation_id)
     if not result.get("success"):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    if result.get("user_id") != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
 
     return ConversationResponse(
         success=True,
@@ -110,11 +138,15 @@ def get_conversation_by_id(conversation_id: str) -> ConversationResponse:
 
 
 @router.get("/conversations/{conversation_id}/messages", response_model=MessagesResponse)
-def get_conversation_messages(conversation_id: str) -> MessagesResponse:
+def get_conversation_messages(conversation_id: str, current_customer: Customer = Depends(get_current_customer)) -> MessagesResponse:
     """Return the complete message history for a conversation."""
     result = get_messages(conversation_id)
     if not result.get("success"):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    conversation = get_conversation(conversation_id)
+    if conversation.get("user_id") != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
 
     return MessagesResponse(
         success=True,
@@ -132,8 +164,11 @@ def get_conversation_messages(conversation_id: str) -> MessagesResponse:
 
 
 @router.get("/users/{user_id}/conversations", response_model=ConversationsListResponse)
-def list_conversations_for_user(user_id: str) -> ConversationsListResponse:
-    """Return all conversations for the specified customer."""
+def list_conversations_for_user(user_id: str, current_customer: Customer = Depends(get_current_customer)) -> ConversationsListResponse:
+    """Return all conversations for the authenticated customer."""
+    if user_id != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only view your own conversations")
+
     result = list_user_conversations(user_id)
     if not result.get("success"):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=result.get("error", "Could not load conversations"))
@@ -158,9 +193,13 @@ def list_conversations_for_user(user_id: str) -> ConversationsListResponse:
 
 
 @router.patch("/conversations/{conversation_id}", response_model=ConversationResponse)
-def update_conversation_metadata(conversation_id: str, payload: ConversationUpdateRequest) -> ConversationResponse:
+def update_conversation_metadata(conversation_id: str, payload: ConversationUpdateRequest, current_customer: Customer = Depends(get_current_customer)) -> ConversationResponse:
     """Rename or update a conversation's metadata."""
-    _ensure_conversation_owned(conversation_id, payload.user_id)
+    conversation = get_conversation(conversation_id)
+    if not conversation.get("success"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    if conversation.get("user_id") != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
 
     result = update_conversation(conversation_id, title=payload.title)
     if not result.get("success"):
@@ -169,7 +208,7 @@ def update_conversation_metadata(conversation_id: str, payload: ConversationUpda
     return ConversationResponse(
         success=True,
         conversation_id=result["conversation_id"],
-        user_id=_ensure_conversation_owned(conversation_id, payload.user_id).get("user_id"),
+        user_id=current_customer.id,
         title=result.get("title"),
         updated_at=result.get("updated_at"),
         is_deleted=result.get("is_deleted", False),
@@ -177,9 +216,16 @@ def update_conversation_metadata(conversation_id: str, payload: ConversationUpda
 
 
 @router.delete("/conversations/{conversation_id}")
-def delete_conversation_by_id(conversation_id: str, user_id: str = Query(..., description="Customer ID that owns the conversation")) -> dict[str, Any]:
+def delete_conversation_by_id(conversation_id: str, user_id: Optional[str] = Query(None, description="Customer ID that owns the conversation"), current_customer: Customer = Depends(get_current_customer)) -> dict[str, Any]:
     """Delete a conversation and its messages."""
-    _ensure_conversation_owned(conversation_id, user_id)
+    target_user_id = user_id or current_customer.id
+    if target_user_id != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only delete your own conversations")
+    conversation = get_conversation(conversation_id)
+    if not conversation.get("success"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    if conversation.get("user_id") != current_customer.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
 
     result = delete_conversation(conversation_id)
     if not result.get("success"):
@@ -193,16 +239,21 @@ def delete_conversation_by_id(conversation_id: str, user_id: str = Query(..., de
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat_with_agent(payload: ChatRequest) -> ChatResponse:
-    """Send a customer message to the existing agent service."""
+def chat_with_agent(payload: ChatRequest, current_customer: Customer = Depends(get_current_customer)) -> ChatResponse:
+    """Send a customer message to the existing agent service using JWT identity."""
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message is required")
 
+    customer_id = current_customer.id
     conversation_id = payload.conversation_id
     if conversation_id:
-        _ensure_conversation_owned(conversation_id, payload.user_id)
+        existing = get_conversation(conversation_id)
+        if not existing.get("success"):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+        if existing.get("user_id") != customer_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
     else:
-        created_conversation = create_conversation(payload.user_id, title="New Conversation")
+        created_conversation = create_conversation(customer_id, title="New Conversation")
         if not created_conversation.get("success"):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=created_conversation.get("error", "Could not create conversation"))
         conversation_id = created_conversation["conversation_id"]
@@ -211,7 +262,7 @@ def chat_with_agent(payload: ChatRequest) -> ChatResponse:
     try:
         result = agent.process_message(
             user_message=payload.message,
-            user_id=payload.user_id,
+            user_id=customer_id,
             conversation_id=conversation_id,
         )
     except Exception as exc:
