@@ -117,8 +117,9 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                         "product_name": {
                             "type": "string",
                             "description": (
-                                "Product name to match against the customer's "
-                                "orders before creating the ticket"
+                                "Optional product name associated with the support issue. "
+                                "Provide it when the issue is related to a specific product or order; "
+                                "omit it for general, account, billing, or other non-product issues."
                             )
                         },
                         "order_date": {
@@ -138,8 +139,13 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                         "priority": {
                             "type": "string",
                             "description": (
-                                "The priority level (LOW, MEDIUM, HIGH, CRITICAL). "
-                                "Defaults to MEDIUM."
+                                "Priority of the support ticket based on the urgency and severity "
+                                "of the customer's issue. Use LOW for minor or non-urgent issues, "
+                                "MEDIUM for normal issues that require standard support, "
+                                "HIGH for serious issues that require prompt attention, and "
+                                "CRITICAL only for severe issues requiring immediate attention. "
+                                "Do not choose a higher priority solely because the customer "
+                                "requests it. Default to MEDIUM when the severity is unclear."
                             ),
                             "enum": [
                                 "LOW",
@@ -192,31 +198,6 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                         }
                     },
                     "required": ["ticket_id"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "escalate_to_human",
-                "description": "Escalate a customer issue for a product-related order to a human support representative after resolving the relevant order by product name.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "customer_id": {
-                            "type": "string",
-                            "description": "Internal application customer ID to escalate"
-                        },
-                        "product_name": {
-                            "type": "string",
-                            "description": "Product name used to identify the order associated with the escalation"
-                        },
-                        "reason": {
-                            "type": "string",
-                            "description": "The reason for escalation"
-                        }
-                    },
-                    "required": ["customer_id", "product_name", "reason"]
                 }
             }
         },

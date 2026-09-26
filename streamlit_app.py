@@ -302,10 +302,10 @@ else:
         I am your local AI support assistant. I can help you with:
 
         - 📦 **Order Status**: Check tracking, delivery estimates, and current order states.
-        - 🚫 **Order Cancellations**: Request cancellations for eligible pending orders.
+        - 🚫 **Order Cancellations**: Check if order can be cancelled.
         - 📋 **Company Policies**: Check refund, return, shipping, and warranty rules.
-        - 🔍 **Inventory & Stock**: Verify product availability, specifications, and prices.
-        - 🎫 **Support Tickets**: Open a new ticket, check existing ticket status, or request escalation.
+        - 🔍 **Product & Stock**: Verify product availability, specifications, and prices.
+        - 🎫 **Support Tickets**: Open a new ticket, check existing ticket status.
 
         ---
         👉 **To get started**, select a past conversation from the sidebar, click **➕ New Conversation**, or simply type your message below.

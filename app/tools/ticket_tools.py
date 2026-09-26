@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
+from enum import Enum
 
 from app.database.db import SessionLocal
 from datetime import datetime
@@ -18,6 +19,8 @@ from app.database.models import (
     TicketPriority,
     TicketStatus,
 )
+
+db: Session = SessionLocal()
 
 
 def _get_matching_customer_orders(
@@ -97,20 +100,15 @@ def _build_ticket_payload(
 
 def create_support_ticket(
     customer_id: str,
-    product_name: str,
     issue: str,
+    product_name: Optional[str] = None,
     priority: str = "MEDIUM",
     order_date: Optional[str] = None
 ) -> dict[str, Any]:
     """Create a support ticket for a customer's product order."""
 
-    query = (product_name or "").strip()
-
-    if not query:
-        return {
-            "success": False,
-            "error": "Product name is required",
-        }
+    if product_name:
+        query = (product_name or "").strip()
 
     if not issue or not issue.strip():
         return {
@@ -126,8 +124,6 @@ def create_support_ticket(
             "error": "Invalid priority",
         }
 
-    db: Session = SessionLocal()
-
     try:
         customer = (
             db.query(Customer)
@@ -140,6 +136,12 @@ def create_support_ticket(
                 "success": False,
                 "error": "Customer not found",
             }
+        if not product_name:
+            return _create_general_support_ticket(
+                customer_id=customer_id,
+                priority=priority_enum,
+                issue=issue
+            )
 
         matches = _get_matching_customer_orders(
             db=db,
@@ -188,8 +190,8 @@ def create_support_ticket(
             customer_id=customer_id,
             order_id=selected_order.id,
             issue=issue.strip(),
-            priority=priority_enum,
-            status=TicketStatus.OPEN,
+            priority=priority_enum.value,
+            status=TicketStatus.OPEN.value,
         )
 
         db.add(ticket)
@@ -228,8 +230,6 @@ def create_support_ticket(
 
 def get_ticket_status(ticket_id: str) -> dict[str, Any]:
     """Retrieve ticket information using the internal ticket ID."""
-
-    db: Session = SessionLocal()
 
     try:
         ticket = (
@@ -321,3 +321,38 @@ def get_support_tickets_by_product_name(
 
     finally:
         db.close()
+
+
+def _create_general_support_ticket(
+    customer_id: str,
+    issue: str,
+    priority: Enum
+) -> dict[str, Any]:
+    ticket = SupportTicket(
+        customer_id=customer_id,
+        order_id=None,
+        issue=issue.strip(),
+        priority=priority.value,
+        status=TicketStatus.OPEN.value,
+    )
+
+    db.add(ticket)
+    db.commit()
+    db.refresh(ticket)
+
+    return {
+        "success": True,
+        "issue": ticket.issue,
+        "priority": ticket.priority.value,
+        "status": ticket.status.value,
+        "created_at": (
+            ticket.created_at.isoformat()
+            if ticket.created_at
+            else None
+        ),
+        "updated_at": (
+            ticket.updated_at.isoformat()
+            if ticket.updated_at
+            else None
+        ),
+    }
