@@ -187,17 +187,21 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "get_ticket_status",
+                "name": "get_ticket_status_by_product_name",
                 "description": "Get the current status and details of a specific support ticket using its internal ticket ID.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "ticket_id": {
+                        "customer_id": {
                             "type": "string",
-                            "description": "Internal UUID for the ticket whose status is requested"
+                            "description": "Internal application customer ID for the owner of the tickets"
+                        },
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name or partial product name to match against associated support tickets"
                         }
                     },
-                    "required": ["ticket_id"]
+                    "required": ["customer_id", "product_name"]
                 }
             }
         },

@@ -5,7 +5,7 @@ This module provides functions to create and query support tickets in SQLite.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from sqlalchemy.orm import Session
 from enum import Enum
@@ -24,7 +24,6 @@ db: Session = SessionLocal()
 
 
 def _get_matching_customer_orders(
-    db: Session,
     customer_id: str,
     product_name: str,
     order_date: Optional[str] = None,
@@ -58,7 +57,7 @@ def _get_matching_customer_orders(
 
 
 def _build_ticket_payload(
-    ticket: SupportTicket,
+    ticket: Type[SupportTicket],
     product_name: str | None = None,
 ) -> dict[str, Any]:
     """Build a customer-safe ticket response."""
@@ -107,8 +106,9 @@ def create_support_ticket(
 ) -> dict[str, Any]:
     """Create a support ticket for a customer's product order."""
 
+    query = ""
     if product_name:
-        query = (product_name or "").strip()
+        query = (product_name or query).strip()
 
     if not issue or not issue.strip():
         return {
@@ -144,7 +144,6 @@ def create_support_ticket(
             )
 
         matches = _get_matching_customer_orders(
-            db=db,
             customer_id=customer_id,
             product_name=query,
             order_date=order_date
@@ -269,6 +268,18 @@ def get_ticket_status(ticket_id: str) -> dict[str, Any]:
         db.close()
 
 
+def get_ticket_status_by_product_name(
+    customer_id: str,
+    product_name: str
+) -> dict[str, Any]:
+
+    result = get_support_tickets_by_product_name(
+        customer_id=customer_id,
+        product_name=product_name
+    )
+    return result
+
+
 def get_support_tickets_by_product_name(
     customer_id: str,
     product_name: str,
@@ -282,8 +293,6 @@ def get_support_tickets_by_product_name(
             "success": False,
             "error": "Product name is required",
         }
-
-    db: Session = SessionLocal()
 
     try:
         tickets = (

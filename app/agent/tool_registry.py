@@ -16,7 +16,7 @@ from app.tools.order_tools import (
 from app.tools.ticket_tools import (
     create_support_ticket,
     get_support_tickets_by_product_name,
-    get_ticket_status,
+    get_ticket_status_by_product_name,
 )
 
 
@@ -28,7 +28,7 @@ TOOL_REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {
     "check_product_by_name": check_product_by_name,
     "create_support_ticket": create_support_ticket,
     "get_support_tickets_by_product_name": get_support_tickets_by_product_name,
-    "get_ticket_status": get_ticket_status,
+    "get_ticket_status_by_product_name": get_ticket_status_by_product_name,
     "retrieve_company_knowledge": retrieve_company_knowledge,
 }
 
