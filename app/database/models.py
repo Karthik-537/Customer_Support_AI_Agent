@@ -1,5 +1,6 @@
 """SQLAlchemy ORM models for customers, orders, inventory, tickets, and conversations."""
 
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -7,6 +8,11 @@ from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum as SqlEn
 from sqlalchemy.orm import relationship
 
 from app.database.db import Base
+
+
+def generate_uuid() -> str:
+    """Generate a UUID string for internal database use."""
+    return str(uuid.uuid4())
 
 
 class OrderStatus(str, Enum):
@@ -48,7 +54,7 @@ class Customer(Base):
 
     __tablename__ = "customers"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     created_at = Column(DateTime, nullable=False, default=utc_now)
@@ -70,8 +76,8 @@ class Order(Base):
         CheckConstraint("quantity > 0", name="ck_orders_quantity_positive"),
     )
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    id = Column(String, primary_key=True, default=generate_uuid)
+    customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
     product_id = Column(String, nullable=False)
     product_name = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
@@ -95,7 +101,7 @@ class Inventory(Base):
         CheckConstraint("price >= 0", name="ck_inventory_price_non_negative"),
     )
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String, primary_key=True, default=generate_uuid)
     product_id = Column(String, nullable=False, unique=True)
     product_name = Column(String, nullable=False)
     category = Column(String, nullable=False)
@@ -113,8 +119,8 @@ class SupportTicket(Base):
 
     __tablename__ = "support_tickets"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    id = Column(String, primary_key=True, default=generate_uuid)
+    customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
     issue = Column(Text, nullable=False)
     priority = Column(SqlEnum(TicketPriority, native_enum=False), nullable=False)
     status = Column(SqlEnum(TicketStatus, native_enum=False), nullable=False)
@@ -132,9 +138,9 @@ class Conversation(Base):
 
     __tablename__  = "conversations"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    conversation_id = Column(String, nullable=False, unique=True, index=True)
-    user_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    id = Column(String, primary_key=True, default=generate_uuid)
+    conversation_id = Column(String, nullable=False, unique=True, index=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("customers.id"), nullable=False)
     title = Column(String, nullable=True, default="New Conversation")
     created_at = Column(DateTime, nullable=False, default=utc_now)
     updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
@@ -152,7 +158,7 @@ class Message(Base):
 
     __tablename__  = "messages"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String, primary_key=True, default=generate_uuid)
     conversation_id = Column(String, ForeignKey("conversations.conversation_id"), nullable=False, index=True)
     user_message = Column(Text, nullable=False)
     response = Column(Text, nullable=False)

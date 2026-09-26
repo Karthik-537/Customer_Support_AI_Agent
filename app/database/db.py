@@ -53,6 +53,8 @@ def init_db(engine_to_use: Engine | None = None) -> None:
     """Create all tables registered on Base.
 
     Models must be imported first so SQLAlchemy knows about each table.
+    Development data is allowed to be reset to keep the schema aligned with the
+    UUID-based project model.
     """
     from app.database import models  # noqa: F401
 

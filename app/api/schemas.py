@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     """Request payload for a chat interaction."""
 
-    user_id: int = Field(..., description="Customer ID that owns the conversation")
+    user_id: str = Field(..., description="Internal customer ID that owns the conversation")
     conversation_id: Optional[str] = Field(None, description="Existing conversation ID for continuing a chat")
     message: str = Field(..., min_length=1, description="Message sent by the customer")
 
@@ -23,7 +23,7 @@ class ChatResponse(BaseModel):
 class CustomerSummary(BaseModel):
     """Customer data returned to the frontend."""
 
-    id: int
+    id: str
     name: str
     email: str
 
@@ -31,7 +31,7 @@ class CustomerSummary(BaseModel):
 class ConversationCreateRequest(BaseModel):
     """Request payload for creating a customer conversation."""
 
-    user_id: int
+    user_id: str
     title: Optional[str] = "New Conversation"
 
 
@@ -40,8 +40,8 @@ class ConversationResponse(BaseModel):
 
     success: bool
     conversation_id: str
-    id: Optional[int] = None
-    user_id: Optional[int] = None
+    id: Optional[str] = None
+    user_id: Optional[str] = None
     title: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -52,14 +52,14 @@ class ConversationResponse(BaseModel):
 class ConversationUpdateRequest(BaseModel):
     """Request payload for updating a conversation."""
 
-    user_id: int
+    user_id: str
     title: Optional[str] = None
 
 
 class MessageRecord(BaseModel):
     """Single user/assistant exchange in a conversation."""
 
-    id: int
+    id: str
     user_message: str
     response: str
     created_at: str
@@ -78,7 +78,7 @@ class ConversationsListResponse(BaseModel):
     """List of conversations for a user."""
 
     success: bool
-    user_id: int
+    user_id: str
     conversations: list[ConversationResponse] = []
     error: Optional[str] = None
 

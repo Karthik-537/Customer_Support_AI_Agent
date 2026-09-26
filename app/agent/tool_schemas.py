@@ -17,14 +17,69 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "get_order_status",
-                "description": "Get the current status and delivery information for a customer order.",
+                "name": "get_my_orders",
+                "description": "Return all orders for the current customer in a customer-friendly format without exposing internal database identifiers.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {
+                            "type": "string",
+                            "description": "Internal application customer ID for the customer whose orders should be retrieved"
+                        }
+                    },
+                    "required": ["customer_id"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_orders_by_product_name",
+                "description": "Search all orders for a customer using a product name, supporting case-insensitive and partial matching. Returns every matching order instead of a single order.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {
+                            "type": "string",
+                            "description": "Internal application customer ID for the customer whose orders are being searched"
+                        },
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name or partial product name to match against the customer's order history"
+                        }
+                    },
+                    "required": ["customer_id", "product_name"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_order_details",
+                "description": "Internal exact lookup for a specific order using its internal UUID. Use this only after the target order has been identified by a customer-safe search.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "order_id": {
-                            "type": "integer",
-                            "description": "The ID of the order"
+                            "type": "string",
+                            "description": "Internal UUID for the exact order to inspect"
+                        }
+                    },
+                    "required": ["order_id"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_order_status",
+                "description": "Get the exact status and delivery information for a specific order using its internal UUID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "order_id": {
+                            "type": "string",
+                            "description": "Internal UUID of the order whose status should be checked"
                         }
                     },
                     "required": ["order_id"]
@@ -35,13 +90,13 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "cancel_order",
-                "description": "Cancel an order. Orders can only be cancelled if they are in PENDING or CONFIRMED status. SHIPPED, DELIVERED, or already CANCELLED orders cannot be cancelled.",
+                "description": "Cancel a specific order by internal UUID. This action is only allowed when the order is in PENDING or CONFIRMED status. It must not be used when multiple matching orders exist without customer clarification.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "order_id": {
-                            "type": "integer",
-                            "description": "The ID of the order to cancel"
+                            "type": "string",
+                            "description": "Internal UUID of the order to cancel"
                         }
                     },
                     "required": ["order_id"]
@@ -51,14 +106,31 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
+                "name": "check_inventory_by_name",
+                "description": "Search inventory by a product name, supporting case-insensitive and partial matching. Returns all relevant products instead of a single product.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name or partial product name to search for in inventory"
+                        }
+                    },
+                    "required": ["product_name"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "check_inventory",
-                "description": "Check whether a product is currently available in stock. Returns product details including stock quantity and price.",
+                "description": "Internal exact inventory lookup by product identifier. Use only after a product has been identified or when a precise internal lookup is needed.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "product_id": {
                             "type": "string",
-                            "description": "The ID of the product to check"
+                            "description": "Internal product identifier used for exact inventory lookup"
                         }
                     },
                     "required": ["product_id"]
@@ -69,13 +141,13 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "create_support_ticket",
-                "description": "Create a support ticket for a customer. The ticket will be created with OPEN status.",
+                "description": "Create a support ticket for a customer. The ticket will be created with OPEN status and the system will keep the customer relationship internal.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "customer_id": {
-                            "type": "integer",
-                            "description": "The ID of the customer creating the ticket"
+                            "type": "string",
+                            "description": "Internal application customer ID for the customer creating the ticket"
                         },
                         "issue": {
                             "type": "string",
@@ -95,13 +167,13 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "get_ticket_status",
-                "description": "Get the current status and details of a support ticket.",
+                "description": "Get the current status and details of a specific support ticket using its internal ticket ID.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "ticket_id": {
-                            "type": "integer",
-                            "description": "The ID of the ticket"
+                            "type": "string",
+                            "description": "Internal UUID for the ticket whose status is requested"
                         }
                     },
                     "required": ["ticket_id"]
@@ -117,8 +189,8 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                     "type": "object",
                     "properties": {
                         "customer_id": {
-                            "type": "integer",
-                            "description": "The ID of the customer to escalate"
+                            "type": "string",
+                            "description": "Internal application customer ID to escalate"
                         },
                         "reason": {
                             "type": "string",
