@@ -61,3 +61,4 @@ def login_customer_account(payload: LoginRequest) -> TokenResponse:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not log in") from exc
     finally:
         db.close()
+
