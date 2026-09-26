@@ -6,5 +6,5 @@ customer_support.db
 .pytest_cache/
 .idea/
 .vscode/
-app/database/seed.py
+seed.py
 create_sample_pdfs.py

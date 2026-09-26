@@ -213,9 +213,12 @@ def get_messages(
         ).order_by(Message.created_at)
 
         if limit:
-            query = query.limit(limit)
+            query = query.order_by(Message.created_at.desc()).limit(limit)
 
         messages = query.all()
+
+        if limit:
+            messages.reverse()
 
         return {
             "success": True,
