@@ -7,9 +7,9 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Structured memories functionality">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/prompts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/llm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/memory/memory_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_processor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -369,7 +369,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790360916396</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Minor Change">
+      <option name="closed" value="true" />
+      <created>1790362381258</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1790362381258</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -394,21 +402,10 @@
     <MESSAGE value="Added columns in memory model" />
     <MESSAGE value="Using Gemini model" />
     <MESSAGE value="Shifted from Ollama to Gemini model" />
-    <MESSAGE value="Minor Change" />
     <MESSAGE value="Bug fix" />
     <MESSAGE value="Rag bug fixes" />
     <MESSAGE value="Structured memories functionality" />
-    <option name="LAST_COMMIT_MESSAGE" value="Structured memories functionality" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/memory/memory_processor.py</url>
-          <line>93</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Minor Change" />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor Change" />
   </component>
 </project>

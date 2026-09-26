@@ -34,7 +34,7 @@ class GeminiClient:
         logger.info("Initialized Gemini client with model=%s", self.model)
 
     def generate_response(
-        self, contents: List,
+        self, contents: List | str,
         memory_content: Optional[Dict[str, list]] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         prompt: Optional[str] = None,

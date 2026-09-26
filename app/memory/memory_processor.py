@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def _build_memory_extraction_prompt(user_message: str, response: str) -> str:
+def _build_memory_extraction_contents(user_message: str, response: str) -> str:
     """Build the system prompt for memory extraction.
 
     Args:
@@ -69,6 +69,20 @@ If nothing is suitable for long-term memory:
 """
 
 
+def _get_memory_extraction_prompt() -> str:
+    return """
+You are a long-term memory extractor for a customer-support AI agent.
+
+Your task is to identify durable, user-specific information that can improve future conversations.
+
+Only store information that is explicitly stated by the user and is likely to remain useful beyond the current conversation.
+
+Be conservative. If information is temporary, uncertain, or only relevant to the current issue, do not store it.
+
+Never invent, infer, or assume user information.
+"""
+
+
 def add_long_term_memories(
         user_message: str, response: str, user_id: int) -> List[Dict[str, Any]]:
     """Extract long-term memory candidates from a user message.
@@ -82,11 +96,14 @@ def add_long_term_memories(
         List of memory candidate dictionaries, or empty list if extraction fails.
     """
     try:
-        prompt = _build_memory_extraction_prompt(user_message=user_message, response=response)
+        prompt = _get_memory_extraction_prompt()
+        contents = _build_memory_extraction_contents(
+            user_message=user_message, response=response
+        )
 
         client = GeminiClient()
         response = client.generate_response(
-            contents=[], prompt=prompt, response_type="application/json"
+            contents=contents, prompt=prompt, response_type="application/json"
         )
         text = response["text"]
         memory_data = json.loads(text) if text else {}
