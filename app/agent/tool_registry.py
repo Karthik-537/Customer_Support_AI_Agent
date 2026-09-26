@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Optional
 
 from app.agent.rag_interface import retrieve_company_knowledge
 from app.tools.escalation import escalate_to_human
-from app.tools.inventory_tools import check_product, check_product_by_name
+from app.tools.product_tools import check_product_by_name
 from app.tools.order_tools import (
     cancel_order,
     check_order_cancellation,

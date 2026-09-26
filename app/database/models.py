@@ -87,6 +87,7 @@ class Order(Base):
 
     customer = relationship("Customer", back_populates="orders")
     product = relationship("Product", back_populates="orders")
+    tickets = relationship("SupportTicket", back_populates="order")
 
     def __repr__(self) -> str:
         return f"<Order id={self.id} status={self.status!r}>"
@@ -95,11 +96,11 @@ class Order(Base):
 class Product(Base):
     """A product that can be sold, including current stock and price."""
 
-    __tablename__ = "product"
+    __tablename__ = "products"
 
     __table_args__ = (
-        CheckConstraint("stock_quantity >= 0", name="ck_inventory_stock_non_negative"),
-        CheckConstraint("price >= 0", name="ck_inventory_price_non_negative"),
+        CheckConstraint("stock_quantity >= 0", name="ck_product_stock_non_negative"),
+        CheckConstraint("price >= 0", name="ck_product_price_non_negative"),
     )
 
     id = Column(String, primary_key=True, default=generate_uuid)
@@ -110,8 +111,10 @@ class Product(Base):
     created_at = Column(DateTime, nullable=False, default=utc_now)
     updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
 
+    orders = relationship("Order", back_populates="product")
+
     def __repr__(self) -> str:
-        return f"<Inventory product_id={self.product_id!r} stock={self.stock_quantity}>"
+        return f"<Product id={self.id!r} product_name={self.product_name!r} stock={self.stock_quantity}>"
 
 
 class SupportTicket(Base):
