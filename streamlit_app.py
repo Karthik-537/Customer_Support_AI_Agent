@@ -195,10 +195,19 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
                     st.error(str(exc))
         return
 
-    if st.button("Rename", use_container_width=True):
+    if st.button(
+        "Rename",
+        key="conversation_action_rename",
+        use_container_width=True,
+    ):
         st.session_state.conversation_action_mode = f"rename:{conversation_id}"
         st.rerun(scope="fragment")
-    if st.button("Delete", use_container_width=True):
+
+    if st.button(
+        "Delete",
+        key="conversation_action_delete",
+        use_container_width=True,
+    ):
         st.session_state.conversation_action_mode = f"delete:{conversation_id}"
         st.rerun(scope="fragment")
 
@@ -487,19 +496,243 @@ if not st.session_state.access_token or not st.session_state.customer:
         st.markdown('</div></div>', unsafe_allow_html=True)
     st.stop()
 
+
+# -----------------------------------------------------------------------------
+# Agent Screen Styling
+# NOTE: This CSS is intentionally placed after the authentication branch.
+# It affects only the authenticated agent screen.
+# -----------------------------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    /* Agent page background */
+    html, body, [data-testid="stAppViewContainer"], .stApp, section.main {
+        background: #0e1017 !important;
+        color: #f8fafc !important;
+    }
+
+    .block-container {
+        max-width: 100% !important;
+        padding-top: 2rem !important;
+        padding-bottom: 0 !important;
+        background: #0e1017 !important;
+    }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: #272833 !important;
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        background: #272833 !important;
+    }
+
+    [data-testid="stSidebar"] * {
+        color: #f8fafc;
+    }
+
+    [data-testid="stSidebar"] .logged-in-email {
+        color: #9ca3af !important;
+        margin-top: -8px;
+        margin-bottom: 16px;
+    }
+
+    /* Logout */
+    [data-testid="stSidebar"] [class*="st-key-agent_logout"] button {
+        width: 82px !important;
+        min-width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        border-radius: 10px !important;
+        background: #2563eb !important;
+        border: 1px solid #2563eb !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-agent_logout"] button:hover {
+        background: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+    }
+
+    /* New conversation */
+    [data-testid="stSidebar"] [class*="st-key-agent_new_conversation"] button {
+        width: 100% !important;
+        min-height: 50px !important;
+        border-radius: 10px !important;
+        background: #ff4b4b !important;
+        border: 1px solid #ff4b4b !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+
+    [data-testid="stSidebar"] [class*="st-key-agent_new_conversation"] button:hover {
+        background: #ff5c5c !important;
+        border-color: #ff5c5c !important;
+    }
+
+    /* Conversation cards from the original agent screen */
+    /* Conversation history: one visible bar per conversation. */
+    [class*="st-key-conversation_row_"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 70px !important;
+        box-sizing: border-box !important;
+        background: #1f2937 !important;
+        border: 1px solid #1f2937 !important;
+        border-radius: 12px !important;
+        padding: 0 8px !important;
+        margin-bottom: 8px !important;
+        overflow: hidden !important;
+    }
+
+    [class*="st-key-conversation_row_"] > div {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* The title button is transparent so it does not create a second bar. */
+    [class*="st-key-conversation_row_"] [class*="st-key-conversation_title_"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    [class*="st-key-conversation_row_"] [class*="st-key-conversation_title_"] > div {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    [class*="st-key-conversation_row_"] [class*="st-key-conversation_title_"] button {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 68px !important;
+        min-height: 68px !important;
+        box-sizing: border-box !important;
+        justify-content: flex-start !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        border: 0 !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+    }
+
+    [class*="st-key-conversation_row_"] [class*="st-key-conversation_title_"] button:hover {
+        background: #2b3748 !important;
+        border: 0 !important;
+    }
+
+    [class*="st-key-conversation_row_"] button {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    [class*="st-key-conversation_row_"] button:hover {
+        background: #2b3748 !important;
+        border: 0 !important;
+    }
+
+    [class*="st-key-conversation_row_"] > div > div > div:first-child button {
+        justify-content: flex-start !important;
+    }
+
+    /* Make the conversation action buttons fill the dialog instead of
+       collapsing to narrow text-sized buttons. */
+    [class*="st-key-conversation_action_rename"] button,
+    [class*="st-key-conversation_action_delete"] button {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 58px !important;
+        min-height: 58px !important;
+        border-radius: 10px !important;
+        padding: 0 16px !important;
+        font-size: 1rem !important;
+        justify-content: center !important;
+    }
+
+    [class*="st-key-sidebar_actions_"] button {
+        color: #ffffff !important;
+        font-size: 1.2rem !important;
+        min-width: 36px !important;
+    }
+
+    /* Main agent content */
+    section.main h1,
+    section.main h2,
+    section.main h3,
+    section.main p,
+    section.main li,
+    section.main div {
+        /* Keep Streamlit's normal typography; only set the page foreground. */
+    }
+
+    /* Chat input */
+    [data-testid="stChatInput"] {
+        background: #272833 !important;
+        border: 1px solid #272833 !important;
+        border-radius: 10px !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        background: #272833 !important;
+        color: #f8fafc !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #9ca3af !important;
+    }
+
+    [data-testid="stChatInput"] button {
+        background: #3a3b45 !important;
+        color: #d1d5db !important;
+        border: 0 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # -----------------------------------------------------------------------------
 # Sidebar: Customer-aware Conversation Navigation
 # -----------------------------------------------------------------------------
 st.sidebar.title("💬 Customer Support AI")
+
 customer = st.session_state.customer
-st.sidebar.caption(f"Logged in as: {customer['name']} ({customer['email']})")
-st.sidebar.button("Logout", use_container_width=True, on_click=logout_user)
-st.sidebar.divider()
 customer_map = {customer["id"]: customer}
 
-if st.sidebar.button("➕ New Conversation", use_container_width=True, type="primary"):
+st.sidebar.caption(f"Logged in as: {customer['name']}")
+st.sidebar.markdown(
+    f'<div class="logged-in-email">({customer["email"]})</div>',
+    unsafe_allow_html=True,
+)
+
+st.sidebar.button(
+    "Logout",
+    use_container_width=False,
+    on_click=logout_user,
+    key="agent_logout",
+)
+
+st.sidebar.divider()
+
+if st.sidebar.button(
+    "➕ New Conversation",
+    use_container_width=True,
+    type="primary",
+    key="agent_new_conversation",
+):
     try:
-        result = create_conversation(st.session_state.customer_id, title="New Conversation", token=st.session_state.access_token)
+        result = create_conversation(
+            st.session_state.customer_id,
+            title="New Conversation",
+            token=st.session_state.access_token,
+        )
         if result.get("success"):
             st.session_state.conversation_id = result["conversation_id"]
             st.rerun()
@@ -511,7 +744,10 @@ if st.sidebar.button("➕ New Conversation", use_container_width=True, type="pri
 st.sidebar.subheader("Conversations")
 
 try:
-    conversations = get_conversations(st.session_state.customer_id, token=st.session_state.access_token)
+    conversations = get_conversations(
+        st.session_state.customer_id,
+        token=st.session_state.access_token,
+    )
 except ApiClientError as exc:
     logger.error(f"Error loading conversations: {exc}")
     conversations = []
@@ -519,46 +755,23 @@ except ApiClientError as exc:
 if not conversations:
     st.sidebar.caption("No conversations yet for this customer.")
 else:
-    st.markdown(
-        """
-        <style>
-        [class*="st-key-conversation_row_"] {
-            background: #1f1f24;
-            border: 1px solid #474751;
-            border-radius: 12px;
-            padding: 6px 8px;
-            margin-bottom: 8px;
-        }
-        [class*="st-key-conversation_row_"] button {
-            background: transparent;
-            border: 0;
-            box-shadow: none;
-        }
-        [class*="st-key-conversation_row_"] button:hover {
-            background: #2b2b32;
-            border: 0;
-        }
-        [class*="st-key-conversation_row_"] > div > div > div:first-child button {
-            justify-content: flex-start;
-        }
-        [class*="st-key-sidebar_actions_"] button {
-            color: #ffffff;
-            font-size: 1.2rem;
-            min-width: 36px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
     for conv in conversations:
         conv_id = conv["conversation_id"]
         conv_title = conv.get("title") or "New Conversation"
+
         with st.sidebar.container(key=f"conversation_row_{conv_id}"):
             conversation_col, actions_col = st.columns([9, 1])
+
             with conversation_col:
-                if st.button(conv_title, key=f"conv_btn_{conv_id}", use_container_width=True):
-                    st.session_state.conversation_id = conv_id
-                    st.rerun()
+                with st.container(key=f"conversation_title_{conv_id}"):
+                    if st.button(
+                        conv_title,
+                        key=f"conv_btn_{conv_id}",
+                        use_container_width=True,
+                    ):
+                        st.session_state.conversation_id = conv_id
+                        st.rerun()
+
             with actions_col:
                 if st.button(
                     "",
@@ -592,7 +805,7 @@ if active_conv_id:
     header_col1, header_col2 = st.columns([5, 1])
     with header_col1:
         st.markdown(f"### 💬 {current_title}")
-        st.caption(f"Customer: **{customer_map[st.session_state.customer_id]['name']}** | Conversation ID: `{active_conv_id}`")
+        st.caption(f"Customer: **{customer_map[st.session_state.customer_id]['name']}**")
 
     with header_col2:
         if st.button(
@@ -631,10 +844,10 @@ else:
         I am your local AI support assistant. I can help you with:
 
         - 📦 **Order Status**: Check tracking, delivery estimates, and current order states.
-        - 🚫 **Order Cancellations**: Check if order can be cancelled.
+        - 🚫 **Order Cancellations**: Request cancellations for eligible pending orders.
         - 📋 **Company Policies**: Check refund, return, shipping, and warranty rules.
-        - 🔍 **Product & Stock**: Verify product availability, specifications, and prices.
-        - 🎫 **Support Tickets**: Open a new ticket, check existing ticket status.
+        - 🔍 **Inventory & Stock**: Verify product availability, specifications, and prices.
+        - 🎫 **Support Tickets**: Open a new ticket, check existing ticket status, or request escalation.
 
         ---
         👉 **To get started**, select a past conversation from the sidebar, click **➕ New Conversation**, or simply type your message below.
