@@ -55,31 +55,14 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "get_order_details",
-                "description": "Internal exact lookup for a specific order using its internal UUID. Use this only after the target order has been identified by a customer-safe search.",
+                "name": "check_order_cancellation",
+                "description": "Check whether the current order can be cancelled without changing the database state.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "order_id": {
                             "type": "string",
-                            "description": "Internal UUID for the exact order to inspect"
-                        }
-                    },
-                    "required": ["order_id"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "get_order_status",
-                "description": "Get the exact status and delivery information for a specific order using its internal UUID.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "order_id": {
-                            "type": "string",
-                            "description": "Internal UUID of the order whose status should be checked"
+                            "description": "Internal UUID of the order to evaluate"
                         }
                     },
                     "required": ["order_id"]
@@ -90,7 +73,7 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "cancel_order",
-                "description": "Cancel a specific order by internal UUID. This action is only allowed when the order is in PENDING or CONFIRMED status. It must not be used when multiple matching orders exist without customer clarification.",
+                "description": "Cancel a specific order by internal UUID only after the backend revalidates that the current state is cancellable.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -106,8 +89,8 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "check_inventory_by_name",
-                "description": "Search inventory by a product name, supporting case-insensitive and partial matching. Returns all relevant products instead of a single product.",
+                "name": "check_product_by_name",
+                "description": "Search product by a product name, supporting case-insensitive and partial matching. Returns all relevant products instead of a single product.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -123,31 +106,18 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "check_inventory",
-                "description": "Internal exact inventory lookup by product identifier. Use only after a product has been identified or when a precise internal lookup is needed.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "product_id": {
-                            "type": "string",
-                            "description": "Internal product identifier used for exact inventory lookup"
-                        }
-                    },
-                    "required": ["product_id"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
                 "name": "create_support_ticket",
-                "description": "Create a support ticket for a customer. The ticket will be created with OPEN status and the system will keep the customer relationship internal.",
+                "description": "Create a support ticket for a customer using the customer's product-name match to the relevant order. If multiple matching orders exist, the tool must ask for clarification instead of creating a ticket automatically.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "customer_id": {
                             "type": "string",
                             "description": "Internal application customer ID for the customer creating the ticket"
+                        },
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name to match against the customer's orders before creating the ticket"
                         },
                         "issue": {
                             "type": "string",
@@ -159,7 +129,28 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                             "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
                         }
                     },
-                    "required": ["customer_id", "issue"]
+                    "required": ["customer_id", "product_name", "issue"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_support_tickets_by_product_name",
+                "description": "Return all support tickets for the current customer associated with a product name, using customer-only and product-name matching rules.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {
+                            "type": "string",
+                            "description": "Internal application customer ID for the owner of the tickets"
+                        },
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name or partial product name to match against associated support tickets"
+                        }
+                    },
+                    "required": ["customer_id", "product_name"]
                 }
             }
         },
@@ -184,7 +175,7 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "escalate_to_human",
-                "description": "Escalate a customer issue to a human support representative. Creates a support ticket with HIGH priority and ESCALATED status.",
+                "description": "Escalate a customer issue for a product-related order to a human support representative after resolving the relevant order by product name.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -192,12 +183,16 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                             "type": "string",
                             "description": "Internal application customer ID to escalate"
                         },
+                        "product_name": {
+                            "type": "string",
+                            "description": "Product name used to identify the order associated with the escalation"
+                        },
                         "reason": {
                             "type": "string",
                             "description": "The reason for escalation"
                         }
                     },
-                    "required": ["customer_id", "reason"]
+                    "required": ["customer_id", "product_name", "reason"]
                 }
             }
         },

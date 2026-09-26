@@ -11,7 +11,11 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.database.db import SessionLocal
-from app.database.models import Order, OrderStatus
+from app.database.models import Order, OrderStatus, Product
+
+
+def _status_value(status: Any) -> str:
+    return status.value if isinstance(status, OrderStatus) else str(status)
 
 
 def _sanitize_order(order: Order) -> dict[str, Any]:
@@ -106,6 +110,49 @@ def get_order_status(order_id: str) -> dict[str, Any]:
     return get_order_details(order_id)
 
 
+def check_order_cancellation(order_id: str) -> dict[str, Any]:
+    """Determine whether the current order can be cancelled."""
+    db: Session = SessionLocal()
+    try:
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if order is None:
+            return {"success": False, "can_cancel": False, "reason": "Order not found"}
+
+        status = _status_value(order.status)
+        if status in {OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value}:
+            return {
+                "success": True,
+                "can_cancel": True,
+                "reason": "Order has not been shipped yet.",
+                "status": status,
+            }
+        if status == OrderStatus.CANCELLED.value:
+            return {
+                "success": True,
+                "can_cancel": False,
+                "reason": "Order has already been cancelled.",
+                "status": status,
+            }
+        if status in {OrderStatus.SHIPPED.value, OrderStatus.DELIVERED.value}:
+            return {
+                "success": True,
+                "can_cancel": False,
+                "reason": f"Order has already been {status.lower()}.",
+                "status": status,
+            }
+        return {
+            "success": True,
+            "can_cancel": False,
+            "reason": f"Order cannot be cancelled in its current state: {status}.",
+            "status": status,
+        }
+    except Exception as exc:  # pragma: no cover - defensive
+        db.rollback()
+        return {"success": False, "can_cancel": False, "reason": f"Database error: {str(exc)}"}
+    finally:
+        db.close()
+
+
 def cancel_order(order_id: str) -> dict[str, Any]:
     """Cancel an order if it is in a cancellable state."""
     db: Session = SessionLocal()
@@ -114,27 +161,24 @@ def cancel_order(order_id: str) -> dict[str, Any]:
         if order is None:
             return {"success": False, "error": "Order not found"}
 
-        current_status = order.status.value if isinstance(order.status, OrderStatus) else str(order.status)
-
-        if current_status == OrderStatus.CANCELLED.value:
-            return {"success": False, "order_id": order.id, "status": current_status, "error": "Order cannot be cancelled because it is already cancelled."}
-
-        if current_status in [OrderStatus.SHIPPED.value, OrderStatus.DELIVERED.value]:
-            return {"success": False, "order_id": order.id, "status": current_status, "error": f"Order cannot be cancelled because it has already been {current_status.lower()}."}
-
-        if current_status not in [OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value]:
-            return {"success": False, "order_id": order.id, "status": current_status, "error": f"Order cannot be cancelled in its current state: {current_status}."}
+        current_status = _status_value(order.status)
+        if current_status not in {OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value}:
+            return {
+                "success": False,
+                "can_cancel": False,
+                "reason": f"Order cannot be cancelled in its current state: {current_status}.",
+                "status": current_status,
+            }
 
         order.status = OrderStatus.CANCELLED.value
         db.commit()
 
         return {
             "success": True,
-            "order_id": order.id,
-            "status": order.status.value if isinstance(order.status, OrderStatus) else str(order.status),
+            "status": _status_value(order.status),
             "message": "Order cancelled successfully",
         }
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception as exc:
         db.rollback()
         return {"success": False, "error": f"Database error: {str(exc)}"}
     finally:

@@ -8,27 +8,31 @@ from typing import Any, Callable, Dict, Optional
 
 from app.agent.rag_interface import retrieve_company_knowledge
 from app.tools.escalation import escalate_to_human
-from app.tools.inventory_tools import check_inventory, check_inventory_by_name
+from app.tools.inventory_tools import check_product, check_product_by_name
 from app.tools.order_tools import (
     cancel_order,
+    check_order_cancellation,
     get_my_orders,
     get_order_details,
     get_order_status,
     get_orders_by_product_name,
 )
-from app.tools.ticket_tools import create_support_ticket, get_ticket_status
+from app.tools.ticket_tools import (
+    create_support_ticket,
+    get_support_tickets_by_product_name,
+    get_ticket_status,
+)
 
 
 # Tool registry mapping tool names to their Python functions
 TOOL_REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {
-    "get_order_details": get_order_details,
-    "get_order_status": get_order_status,
+    "check_order_cancellation": check_order_cancellation,
     "get_my_orders": get_my_orders,
     "get_orders_by_product_name": get_orders_by_product_name,
     "cancel_order": cancel_order,
-    "check_inventory": check_inventory,
-    "check_inventory_by_name": check_inventory_by_name,
+    "check_product_by_name": check_product_by_name,
     "create_support_ticket": create_support_ticket,
+    "get_support_tickets_by_product_name": get_support_tickets_by_product_name,
     "get_ticket_status": get_ticket_status,
     "escalate_to_human": escalate_to_human,
     "retrieve_company_knowledge": retrieve_company_knowledge,

@@ -78,7 +78,7 @@ class Order(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
-    product_id = Column(String, nullable=False)
+    product_id = Column(String, ForeignKey("products.id"), nullable=False)
     product_name = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
     status = Column(SqlEnum(OrderStatus, native_enum=False), nullable=False)
@@ -86,15 +86,16 @@ class Order(Base):
     delivery_date = Column(DateTime, nullable=True)
 
     customer = relationship("Customer", back_populates="orders")
+    product = relationship("Product", back_populates="orders")
 
     def __repr__(self) -> str:
         return f"<Order id={self.id} status={self.status!r}>"
 
 
-class Inventory(Base):
+class Product(Base):
     """A product that can be sold, including current stock and price."""
 
-    __tablename__ = "inventory"
+    __tablename__ = "product"
 
     __table_args__ = (
         CheckConstraint("stock_quantity >= 0", name="ck_inventory_stock_non_negative"),
@@ -102,7 +103,6 @@ class Inventory(Base):
     )
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    product_id = Column(String, nullable=False, unique=True)
     product_name = Column(String, nullable=False)
     category = Column(String, nullable=False)
     stock_quantity = Column(Integer, nullable=False)
@@ -121,6 +121,7 @@ class SupportTicket(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
+    order_id = Column(String, ForeignKey("orders.id"), nullable=True)
     issue = Column(Text, nullable=False)
     priority = Column(SqlEnum(TicketPriority, native_enum=False), nullable=False)
     status = Column(SqlEnum(TicketStatus, native_enum=False), nullable=False)
@@ -128,6 +129,7 @@ class SupportTicket(Base):
     updated_at = Column(DateTime, nullable=False, default=utc_now, onupdate=utc_now)
 
     customer = relationship("Customer", back_populates="tickets")
+    order = relationship("Order", back_populates="tickets")
 
     def __repr__(self) -> str:
         return f"<SupportTicket id={self.id} status={self.status!r}>"

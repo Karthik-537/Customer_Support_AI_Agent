@@ -7,10 +7,15 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Added more tools for user flexibility">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/llm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/memory/memory_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/memory/memory_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/tool_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_registry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/tool_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/tools/escalation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/escalation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/tools/inventory_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/inventory_tools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/tools/order_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/order_tools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/tools/ticket_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/ticket_tools.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -377,7 +382,23 @@
       <option name="project" value="LOCAL" />
       <updated>1790362381258</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Added prompt to memory extraction">
+      <option name="closed" value="true" />
+      <created>1790398931940</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1790398931940</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Added more tools for user flexibility">
+      <option name="closed" value="true" />
+      <created>1790401345679</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1790401345679</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -406,6 +427,8 @@
     <MESSAGE value="Rag bug fixes" />
     <MESSAGE value="Structured memories functionality" />
     <MESSAGE value="Minor Change" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor Change" />
+    <MESSAGE value="Added prompt to memory extraction" />
+    <MESSAGE value="Added more tools for user flexibility" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added more tools for user flexibility" />
   </component>
 </project>
