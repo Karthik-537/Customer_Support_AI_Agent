@@ -7,16 +7,7 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Added more tools for user flexibility">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/tool_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_registry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/tool_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tools/escalation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/escalation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tools/inventory_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/inventory_tools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tools/order_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/order_tools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tools/ticket_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/ticket_tools.py" afterDir="false" />
-    </list>
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Converted from id specific to name specific" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -398,7 +389,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790401345679</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Converted from id specific to name specific">
+      <option name="closed" value="true" />
+      <created>1790408712922</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1790408712922</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -429,6 +428,7 @@
     <MESSAGE value="Minor Change" />
     <MESSAGE value="Added prompt to memory extraction" />
     <MESSAGE value="Added more tools for user flexibility" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added more tools for user flexibility" />
+    <MESSAGE value="Converted from id specific to name specific" />
+    <option name="LAST_COMMIT_MESSAGE" value="Converted from id specific to name specific" />
   </component>
 </project>
