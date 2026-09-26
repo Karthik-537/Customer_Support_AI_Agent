@@ -7,10 +7,9 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Removed human escalation">
-      <change beforePath="$PROJECT_DIR$/app/agent/tool_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_registry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent/tool_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tools/ticket_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/ticket_tools.py" afterDir="false" />
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Minor Change">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -457,7 +456,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790429443956</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Minor Change">
+      <option name="closed" value="true" />
+      <created>1790430139590</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1790430139590</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -481,7 +488,6 @@
     <MESSAGE value="Bug fix" />
     <MESSAGE value="Rag bug fixes" />
     <MESSAGE value="Structured memories functionality" />
-    <MESSAGE value="Minor Change" />
     <MESSAGE value="Added prompt to memory extraction" />
     <MESSAGE value="Added more tools for user flexibility" />
     <MESSAGE value="Converted from id specific to name specific" />
@@ -489,6 +495,7 @@
     <MESSAGE value="Handling user_id as str on UI" />
     <MESSAGE value="Order cancellation scope removed" />
     <MESSAGE value="Removed human escalation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed human escalation" />
+    <MESSAGE value="Minor Change" />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor Change" />
   </component>
 </project>

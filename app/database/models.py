@@ -58,6 +58,7 @@ class Customer(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
+    password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=utc_now)
 
     orders = relationship("Order", back_populates="customer")
