@@ -71,7 +71,7 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                             "description": "Product name or partial product name to match against the customer's order history"
                         },
                     },
-                    "required": ["order_id"]
+                    "required": ["customer_id", "product_name"]
                 }
             }
         },
@@ -157,7 +157,6 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
                     },
                     "required": [
                         "customer_id",
-                        "product_name",
                         "issue"
                     ]
                 }

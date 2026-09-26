@@ -178,13 +178,24 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
 
     if action_mode == f"delete:{conversation_id}":
         st.write(f"This will delete **{conversation_title}**.")
-        cancel_col, delete_col = st.columns(2)
+        cancel_col, delete_col = st.columns([1, 1], gap="small")
         with cancel_col:
-            if st.button("Cancel", use_container_width=True):
-                st.session_state.conversation_action_mode = None
-                st.rerun(scope="fragment")
+            with st.container(key="conversation_action_cancel_wrap"):
+                if st.button(
+                    "Cancel",
+                    key="conversation_action_cancel",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    st.session_state.conversation_action_mode = None
+                    st.rerun(scope="fragment")
         with delete_col:
-            if st.button("Delete", type="primary", use_container_width=True):
+            if st.button(
+                "Delete",
+                key="conversation_action_delete_confirm",
+                type="primary",
+                use_container_width=True,
+            ):
                 try:
                     delete_conversation(conversation_id, st.session_state.customer_id, token=st.session_state.access_token)
                     if st.session_state.get("conversation_id") == conversation_id:
@@ -195,21 +206,25 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
                     st.error(str(exc))
         return
 
-    if st.button(
-        "Rename",
-        key="conversation_action_rename",
-        use_container_width=True,
-    ):
-        st.session_state.conversation_action_mode = f"rename:{conversation_id}"
-        st.rerun(scope="fragment")
+    with st.container(key="conversation_action_rename_wrap"):
+        if st.button(
+            "Rename",
+            key="conversation_action_rename",
+            type="primary",
+            use_container_width=True,
+        ):
+            st.session_state.conversation_action_mode = f"rename:{conversation_id}"
+            st.rerun(scope="fragment")
 
-    if st.button(
-        "Delete",
-        key="conversation_action_delete",
-        use_container_width=True,
-    ):
-        st.session_state.conversation_action_mode = f"delete:{conversation_id}"
-        st.rerun(scope="fragment")
+    with st.container(key="conversation_action_delete_wrap"):
+        if st.button(
+            "Delete",
+            key="conversation_action_delete",
+            type="primary",
+            use_container_width=True,
+        ):
+            st.session_state.conversation_action_mode = f"delete:{conversation_id}"
+            st.rerun(scope="fragment")
 
 
 _ensure_auth_state()
@@ -576,10 +591,12 @@ st.markdown(
     [class*="st-key-conversation_row_"] {
         width: 100% !important;
         max-width: 100% !important;
-        min-height: 70px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        min-height: 63px !important;
         box-sizing: border-box !important;
-        background: #1f2937 !important;
-        border: 1px solid #1f2937 !important;
+        background: #0e1117 !important;
+        border: 1px solid #0e1117 !important;
         border-radius: 12px !important;
         padding: 0 8px !important;
         margin-bottom: 8px !important;
@@ -606,8 +623,8 @@ st.markdown(
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
-        height: 68px !important;
-        min-height: 68px !important;
+        height: 63px !important;
+        min-height: 63px !important;
         box-sizing: border-box !important;
         justify-content: flex-start !important;
         padding: 0 12px !important;
@@ -641,18 +658,128 @@ st.markdown(
         justify-content: flex-start !important;
     }
 
-    /* Make the conversation action buttons fill the dialog instead of
-       collapsing to narrow text-sized buttons. */
-    [class*="st-key-conversation_action_rename"] button,
-    [class*="st-key-conversation_action_delete"] button {
+    /* Conversation action buttons: wide enough for their full labels. */
+    [class*="st-key-conversation_action_rename_wrap"],
+    [class*="st-key-conversation_action_delete_wrap"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 12px 0 !important;
+    }
+
+    [class*="st-key-conversation_action_rename_wrap"] > div,
+    [class*="st-key-conversation_action_delete_wrap"] > div {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    [class*="st-key-conversation_action_rename_wrap"] button,
+    [class*="st-key-conversation_action_delete_wrap"] button {
+        display: flex !important;
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
-        height: 58px !important;
-        min-height: 58px !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        box-sizing: border-box !important;
+        align-items: center !important;
+        justify-content: center !important;
         border-radius: 10px !important;
-        padding: 0 16px !important;
-        font-size: 1rem !important;
+        padding: 0 20px !important;
+        font-size: 1.05rem !important;
+        background: #1f2937 !important;
+        border: 1px solid #1f2937 !important;
+        color: #ffffff !important;
+        white-space: nowrap !important;
+    }
+
+    [class*="st-key-conversation_action_rename_wrap"] button:hover,
+    [class*="st-key-conversation_action_delete_wrap"] button:hover {
+        background: #273449 !important;
+        border-color: #273449 !important;
+        color: #ffffff !important;
+    }
+
+    /* Delete dialog: Cancel must have the same dimensions as Delete. */
+    [class*="st-key-conversation_action_cancel_wrap"] {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    [class*="st-key-conversation_action_cancel_wrap"] > div {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    [class*="st-key-conversation_action_cancel_wrap"] button {
+        display: flex !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    [class*="st-key-conversation_action_cancel_wrap"] button {
+        height: 64px !important;
+        min-height: 64px !important;
+        border-radius: 10px !important;
+        padding: 0 20px !important;
+        font-size: 1.05rem !important;
+        background: #1f2937 !important;
+        border: 1px solid #1f2937 !important;
+        color: #ffffff !important;
+        white-space: nowrap !important;
+    }
+
+    /* Delete confirmation button: exactly the same dimensions as Cancel. */
+    [class*="st-key-conversation_action_delete_confirm"] button {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        box-sizing: border-box !important;
+        border-radius: 10px !important;
+        padding: 0 20px !important;
+        font-size: 1.05rem !important;
+        background: #ff4b4b !important;
+        border: 1px solid #ff4b4b !important;
+        color: #ffffff !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    [class*="st-key-conversation_action_delete_confirm"] button:hover {
+        background: #ff5c5c !important;
+        border-color: #ff5c5c !important;
+        color: #ffffff !important;
+    }
+
+    [class*="st-key-conversation_action_cancel_wrap"] button:hover {
+        background: #273449 !important;
+        border-color: #273449 !important;
+        color: #ffffff !important;
+    }
+
+    [class*="st-key-sidebar_actions_"] {
+        height: 63px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    [class*="st-key-sidebar_actions_"] > div {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
         justify-content: center !important;
     }
 
@@ -660,6 +787,14 @@ st.markdown(
         color: #ffffff !important;
         font-size: 1.2rem !important;
         min-width: 36px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
     /* Main agent content */

@@ -45,6 +45,7 @@ class GeminiClient:
 
         Args:
             contents: List of contents.
+            user_id: customer's id
             memory_content: Contains both short and long term memories
             tools: Optional list of tool definitions for function calling.
             prompt: system prompt
@@ -62,7 +63,7 @@ class GeminiClient:
             system_instruction = get_system_prompt(
                 short_term_memories=memory_content["short_term_memories"],
                 long_term_memories=memory_content["long_term_memories"],
-                user_id = user_id
+                user_id=user_id
             ) if not prompt else prompt
             config = types.GenerateContentConfig(
                 system_instruction=system_instruction or None,
@@ -90,7 +91,7 @@ class GeminiClient:
         return types.FunctionDeclaration(
             name=function["name"],
             description=function.get("description"),
-            parameters=function.get("parameters"),
+            parameters_json_schema=function.get("parameters"),
         )
 
     @staticmethod

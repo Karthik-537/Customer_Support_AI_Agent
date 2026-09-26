@@ -9,6 +9,8 @@
   <component name="ChangeListManager">
     <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Added auth to existing agent">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/llm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/tool_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/tool_schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
