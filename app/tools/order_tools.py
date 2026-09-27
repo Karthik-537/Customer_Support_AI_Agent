@@ -184,7 +184,7 @@ def check_order_cancellation(
                 {
                     "product_name": order.product_name,
                     "order_date": (
-                        order.order_date.date().isoformat()
+                        order.order_date.isoformat()
                         if order.order_date
                         else None
                     ),
