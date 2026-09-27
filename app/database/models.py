@@ -85,7 +85,7 @@ class Order(Base):
     quantity = Column(Integer, nullable=False)
     status = Column(SqlEnum(OrderStatus, native_enum=False), nullable=False)
     order_date = Column(Date, nullable=False, default=utc_now)
-    delivery_date = Column(Date, nullable=True)
+    delivery_date = Column(Date, nullable=False)
 
     customer = relationship("Customer", back_populates="orders")
     product = relationship("Product", back_populates="orders")
