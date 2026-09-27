@@ -40,7 +40,7 @@ def _get_matching_customer_orders(
 
     if order_date:
         try:
-            order_date = datetime.strptime(order_date, "%Y-%m-%d")
+            order_date = datetime.strptime(order_date, "%Y-%m-%d").date()
         except ValueError:
             return {
                 "success": False,

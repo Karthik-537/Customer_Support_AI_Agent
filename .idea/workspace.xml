@@ -7,11 +7,10 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="">
+    <list default="true" id="0e12ff1a-50a1-41ce-9382-62a45e55a82a" name="Changes" comment="Minor Changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/agent/prompts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/tools/ticket_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tools/ticket_tools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +87,7 @@
       <recent name="C:\Users\91934\PycharmProjects\Customer_Support_AI_Agent" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.seed (1)">
+  <component name="RunManager" selected="Python.run server">
     <configuration name="db" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Customer_Support_AI_Agent" />
       <option name="ENV_FILES" value="" />
@@ -185,8 +184,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.seed (1)" />
         <item itemvalue="Python.run server" />
+        <item itemvalue="Python.seed (1)" />
         <item itemvalue="Python.ingest" />
         <item itemvalue="Python.db" />
       </list>
@@ -496,7 +495,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790454001169</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="Minor Changes">
+      <option name="closed" value="true" />
+      <created>1790485632824</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1790485632824</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -520,7 +527,6 @@
     <MESSAGE value="Added prompt to memory extraction" />
     <MESSAGE value="Added more tools for user flexibility" />
     <MESSAGE value="Converted from id specific to name specific" />
-    <MESSAGE value="Minor Changes" />
     <MESSAGE value="Handling user_id as str on UI" />
     <MESSAGE value="Order cancellation scope removed" />
     <MESSAGE value="Removed human escalation" />
@@ -528,17 +534,7 @@
     <MESSAGE value="Added password to Customer table" />
     <MESSAGE value="Added auth to existing agent" />
     <MESSAGE value="Fix minor issue" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix minor issue" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app/agent/agent.py</url>
-          <line>99</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Minor Changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor Changes" />
   </component>
 </project>
