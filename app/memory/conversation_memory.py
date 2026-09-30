@@ -25,24 +25,19 @@ def generate_conversation_id() -> str:
 def create_conversation(
     user_id: str,
     title: str = "New Conversation",
-    conversation_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Create a new conversation.
 
     Args:
         user_id: The ID of the customer.
         title: Optional title for the conversation.
-        conversation_id: Optional pre-generated conversation ID.
 
     Returns:
         Dictionary containing the created conversation info.
     """
     db: Session = SessionLocal()
     try:
-        conv_id = conversation_id or generate_conversation_id()
-
         conversation = Conversation(
-            conversation_id=conv_id,
             user_id=user_id,
             title=title
         )
@@ -50,11 +45,10 @@ def create_conversation(
         db.commit()
         db.refresh(conversation)
 
-        logger.info(f"Created conversation {conv_id} for user {user_id}")
+        logger.info(f"Created conversation for user {user_id}")
         return {
             "success": True,
-            "conversation_id": conversation.conversation_id,
-            "id": conversation.id,
+            "conversation_id": conversation.id,
             "title": conversation.title,
             "created_at": conversation.created_at.isoformat()
         }
@@ -78,7 +72,7 @@ def get_conversation(conversation_id: str) -> Dict[str, Any]:
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id,
+            Conversation.id == conversation_id,
             Conversation.is_deleted.is_(False),
         ).first()
 
@@ -87,8 +81,7 @@ def get_conversation(conversation_id: str) -> Dict[str, Any]:
 
         return {
             "success": True,
-            "conversation_id": conversation.conversation_id,
-            "id": conversation.id,
+            "conversation_id": conversation.id,
             "user_id": conversation.user_id,
             "title": conversation.title,
             "created_at": conversation.created_at.isoformat(),
@@ -149,7 +142,7 @@ def add_conversation_message(
     try:
         # Verify conversation exists
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id,
+            Conversation.id == conversation_id,
             Conversation.is_deleted.is_(False),
         ).first()
 
@@ -202,14 +195,14 @@ def get_messages(
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id,
+            Conversation.id == conversation_id,
             Conversation.is_deleted.is_(False),
         ).first()
         if conversation is None:
             return {"success": False, "error": "Conversation not found"}
 
         query = db.query(Message).filter(
-            Message.conversation_id == conversation.conversation_id,
+            Message.conversation_id == conversation.id,
         ).order_by(Message.created_at)
 
         if limit:
@@ -256,7 +249,7 @@ def update_conversation(
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id,
+            Conversation.id == conversation_id,
             Conversation.is_deleted.is_(False),
         ).first()
 
@@ -273,7 +266,7 @@ def update_conversation(
         logger.info(f"Updated conversation {conversation_id}")
         return {
             "success": True,
-            "conversation_id": conversation.conversation_id,
+            "conversation_id": conversation.id,
             "title": conversation.title,
             "updated_at": conversation.updated_at.isoformat()
         }
@@ -297,7 +290,7 @@ def delete_conversation(conversation_id: str) -> Dict[str, Any]:
     db: Session = SessionLocal()
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.conversation_id == conversation_id,
+            Conversation.id == conversation_id,
             Conversation.is_deleted.is_(False),
         ).first()
 
@@ -338,8 +331,7 @@ def list_user_conversations(user_id: str) -> Dict[str, Any]:
             "user_id": user_id,
             "conversations": [
                 {
-                    "id": conv.id,
-                    "conversation_id": conv.conversation_id,
+                    "conversation_id": conv.id,
                     "title": conv.title,
                     "created_at": conv.created_at.isoformat(),
                     "updated_at": conv.updated_at.isoformat(),

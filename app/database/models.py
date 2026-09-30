@@ -146,7 +146,6 @@ class Conversation(Base):
     __tablename__  = "conversations"
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    conversation_id = Column(String, nullable=False, unique=True, index=True, default=generate_uuid)
     user_id = Column(String, ForeignKey("customers.id"), nullable=False)
     title = Column(String, nullable=True, default="New Conversation")
     created_at = Column(DateTime, nullable=False, default=utc_now)
@@ -166,7 +165,7 @@ class Message(Base):
     __tablename__  = "messages"
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    conversation_id = Column(String, ForeignKey("conversations.conversation_id"), nullable=False, index=True)
+    conversation_id = Column(String, ForeignKey("conversations.id"), nullable=False, index=True)
     user_message = Column(Text, nullable=False)
     response = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, default=utc_now)
