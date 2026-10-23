@@ -4,6 +4,7 @@ This module provides a clean, customer-facing chat UI that communicates with the
 existing FastAPI backend instead of importing agent and database service logic.
 """
 
+import hashlib
 import logging
 import os
 from typing import Optional
@@ -24,6 +25,11 @@ from app.frontend.api_client import (
     register_customer,
     rename_conversation,
     send_message,
+)
+from app.services.voice_service import (
+    generate_voice_reply,
+    spoken_replies_enabled,
+    transcribe_audio,
 )
 
 logger = logging.getLogger(__name__)
@@ -286,6 +292,160 @@ def _title_from_first_message(message: str) -> str:
     return clean[:40] + ("..." if len(clean) > 40 else "")
 
 
+def _ensure_voice_state() -> None:
+    if "voice_replies_enabled" not in st.session_state:
+        st.session_state.voice_replies_enabled = spoken_replies_enabled()
+    if "spoken_replies" not in st.session_state:
+        st.session_state.spoken_replies = {}
+    if "last_processed_audio_fingerprint" not in st.session_state:
+        st.session_state.last_processed_audio_fingerprint = None
+
+
+def _spoken_reply_key(conversation_id: str, response_text: str) -> str:
+    digest = hashlib.sha256(response_text.encode("utf-8")).hexdigest()
+    return f"{conversation_id}:{digest}"
+
+
+def _cache_spoken_reply(conversation_id: str, response_text: str, audio_bytes: bytes) -> None:
+    if not audio_bytes:
+        return
+    st.session_state.spoken_replies[_spoken_reply_key(conversation_id, response_text)] = audio_bytes
+
+
+def _get_spoken_reply(conversation_id: str, response_text: str) -> Optional[bytes]:
+    return st.session_state.spoken_replies.get(_spoken_reply_key(conversation_id, response_text))
+
+
+def _audio_fingerprint(audio_bytes: bytes) -> str:
+    return hashlib.sha256(audio_bytes).hexdigest()
+
+
+def _resolve_chat_submission(chat_value) -> Optional[str]:
+    """Turn typed or recorded chat input into one user message for the agent."""
+    if chat_value is None:
+        return None
+
+    if isinstance(chat_value, str):
+        typed = chat_value.strip()
+        return typed or None
+
+    typed = str(getattr(chat_value, "text", "") or "").strip()
+    if typed:
+        return typed
+
+    audio_file = getattr(chat_value, "audio", None)
+    if audio_file is None:
+        return None
+
+    audio_bytes = audio_file.getvalue() if hasattr(audio_file, "getvalue") else bytes(audio_file)
+    fingerprint = _audio_fingerprint(audio_bytes)
+    if fingerprint == st.session_state.get("last_processed_audio_fingerprint"):
+        return None
+
+    with st.spinner("Transcribing your voice message..."):
+        transcript = transcribe_audio(audio_bytes)
+
+    if not transcript:
+        st.warning("I couldn't hear a clear message. Please try recording again.")
+        st.session_state.last_processed_audio_fingerprint = fingerprint
+        return None
+
+    st.session_state.last_processed_audio_fingerprint = fingerprint
+    return transcript
+
+
+def _maybe_generate_spoken_reply(conversation_id: str, response_text: str) -> Optional[bytes]:
+    """Synthesize audio only for the final agent reply, never tool steps."""
+    if not st.session_state.get("voice_replies_enabled"):
+        return None
+    if not response_text:
+        return None
+    cached = _get_spoken_reply(conversation_id, response_text)
+    if cached:
+        return cached
+    try:
+        audio_bytes = generate_voice_reply(response_text)
+    except Exception:
+        logger.exception("Spoken reply generation failed")
+        return None
+    _cache_spoken_reply(conversation_id, response_text, audio_bytes)
+    return audio_bytes or None
+
+
+def _dispatch_customer_message(user_message: str) -> None:
+    """Send a typed or transcribed message through the existing CSA chat API."""
+    if not st.session_state.get("conversation_id"):
+        derived_title = user_message.strip()[:35] + ("..." if len(user_message.strip()) > 35 else "")
+        try:
+            created = create_conversation(
+                st.session_state.customer_id,
+                title=derived_title,
+                token=st.session_state.access_token,
+            )
+            if created.get("success"):
+                st.session_state.conversation_id = created["conversation_id"]
+                _set_conversation_cookie(st.session_state.conversation_id)
+            else:
+                st.error("Failed to start a new conversation. Please try again.")
+                st.stop()
+        except ApiClientError as exc:
+            st.error(str(exc))
+            st.stop()
+
+    conversation_id = st.session_state.conversation_id
+
+    with st.chat_message("user"):
+        st.markdown(user_message)
+
+    with st.chat_message("assistant"):
+        response_data = None
+        with st.spinner("AI is thinking..."):
+            try:
+                response_data = send_message(
+                    user_id=st.session_state.customer_id,
+                    message=user_message,
+                    conversation_id=conversation_id,
+                    token=st.session_state.access_token,
+                )
+            except ApiClientError as exc:
+                logger.error("Unexpected API error: %s", exc, exc_info=True)
+                st.error("Sorry, I couldn't process your request right now. Please try again.")
+
+        if not response_data:
+            if response_data is not None:
+                st.error("Sorry, I couldn't process your request right now. Please try again.")
+            return
+
+        response_text = response_data.get("response", "")
+        st.markdown(response_text)
+        if st.session_state.get("voice_replies_enabled") and response_text:
+            with st.spinner("Generating spoken reply..."):
+                spoken_audio = _maybe_generate_spoken_reply(conversation_id, response_text)
+            if spoken_audio:
+                st.audio(spoken_audio, format="audio/wav")
+            else:
+                st.caption("Spoken reply is unavailable. The text response is shown above.")
+
+        try:
+            active_info = get_conversation(
+                conversation_id,
+                token=st.session_state.access_token,
+            )
+            existing_title = (active_info.get("title") or "").strip()
+            if existing_title.lower() in {"", "new conversation"}:
+                try:
+                    rename_conversation(
+                        conversation_id,
+                        st.session_state.customer_id,
+                        _title_from_first_message(user_message),
+                        token=st.session_state.access_token,
+                    )
+                except ApiClientError as exc:
+                    logger.warning("Could not auto-title conversation: %s", exc)
+        except ApiClientError as exc:
+            logger.warning("Could not inspect conversation title: %s", exc)
+
+
 @st.dialog("Delete chat?")
 def confirm_delete_conversation(conversation_id: str, conversation_title: str) -> None:
     """Confirm and soft-delete a conversation."""
@@ -399,6 +559,7 @@ def conversation_actions_dialog(conversation_id: str, conversation_title: str) -
 
 
 _ensure_auth_state()
+_ensure_voice_state()
 # Wait for the browser cookie component to initialize before making the
 # authentication decision. This is the documented cookie-manager pattern.
 if not cookie_manager.ready():
@@ -1037,6 +1198,12 @@ if st.sidebar.button(
     logout_user()
     st.rerun()
 
+st.sidebar.toggle(
+    "Spoken replies",
+    key="voice_replies_enabled",
+    help="Play an AI voice reading the final support reply. Tool steps are never spoken.",
+)
+
 st.sidebar.divider()
 
 if st.sidebar.button(
@@ -1157,6 +1324,9 @@ if active_conv_id:
             if msg.get("response"):
                 with st.chat_message("assistant"):
                     st.markdown(msg["response"])
+                    spoken_audio = _get_spoken_reply(active_conv_id, msg["response"])
+                    if spoken_audio:
+                        st.audio(spoken_audio, format="audio/wav")
 
 else:
     active_customer = customer_map[st.session_state.customer_id]
@@ -1172,7 +1342,7 @@ else:
         - 🎫 **Support Tickets**: Open a new ticket, check existing ticket status.
 
         ---
-        👉 **To get started**, select a past conversation from the sidebar, click **➕ New Conversation**, or simply type your message below.
+        👉 **To get started**, select a past conversation from the sidebar, click **➕ New Conversation**, or type / record a message below.
         """
     )
 
@@ -1180,65 +1350,11 @@ else:
 # -----------------------------------------------------------------------------
 # Chat Input & Agent Dispatch
 # -----------------------------------------------------------------------------
-user_message = st.chat_input("How can we help you today?")
-
+chat_value = st.chat_input(
+    "Type or record a message",
+    accept_audio=True,
+    audio_sample_rate=16000,
+)
+user_message = _resolve_chat_submission(chat_value)
 if user_message:
-    if not st.session_state.get("conversation_id"):
-        derived_title = user_message.strip()[:35] + ("..." if len(user_message.strip()) > 35 else "")
-        try:
-            created = create_conversation(st.session_state.customer_id, title=derived_title, token=st.session_state.access_token)
-            if created.get("success"):
-                st.session_state.conversation_id = created["conversation_id"]
-                _set_conversation_cookie(st.session_state.conversation_id)
-            else:
-                st.error("Failed to start a new conversation. Please try again.")
-                st.stop()
-        except ApiClientError as exc:
-            st.error(str(exc))
-            st.stop()
-
-    conversation_id = st.session_state.conversation_id
-
-    with st.chat_message("user"):
-        st.markdown(user_message)
-
-    with st.chat_message("assistant"):
-        with st.spinner("AI is thinking..."):
-            try:
-                response_data = send_message(
-                    user_id=st.session_state.customer_id,
-                    message=user_message,
-                    conversation_id=conversation_id,
-                    token=st.session_state.access_token,
-                )
-                if response_data:
-                    st.markdown(response_data.get("response", ""))
-
-                    # Give a newly-created/default conversation a meaningful
-                    # title based on its first customer message. Existing
-                    # custom/renamed titles are left untouched.
-                    try:
-                        active_info = get_conversation(
-                            conversation_id,
-                            token=st.session_state.access_token,
-                        )
-                        existing_title = (active_info.get("title") or "").strip()
-                        if existing_title.lower() in {"", "new conversation"}:
-                            try:
-                                rename_conversation(
-                                    conversation_id,
-                                    st.session_state.customer_id,
-                                    _title_from_first_message(user_message),
-                                    token=st.session_state.access_token,
-                                )
-                            except ApiClientError as exc:
-                                # Title generation must never break an otherwise
-                                # successful chat response.
-                                logger.warning("Could not auto-title conversation: %s", exc)
-                    except ApiClientError as exc:
-                        logger.warning("Could not inspect conversation title: %s", exc)
-                else:
-                    st.error("Sorry, I couldn't process your request right now. Please try again.")
-            except ApiClientError as exc:
-                logger.error(f"Unexpected API error: {exc}", exc_info=True)
-                st.error("Sorry, I couldn't process your request right now. Please try again.")
+    _dispatch_customer_message(user_message)
