@@ -29,7 +29,6 @@ from app.frontend.api_client import (
 from app.services.voice_service import (
     generate_voice_reply,
     spoken_replies_enabled,
-    transcribe_audio,
 )
 
 logger = logging.getLogger(__name__)
@@ -320,38 +319,30 @@ def _audio_fingerprint(audio_bytes: bytes) -> str:
     return hashlib.sha256(audio_bytes).hexdigest()
 
 
-def _resolve_chat_submission(chat_value) -> Optional[str]:
-    """Turn typed or recorded chat input into one user message for the agent."""
+def _resolve_chat_submission(chat_value) -> tuple[Optional[str], Optional[bytes]]:
+    """Return typed text or raw audio for the backend agent to process."""
     if chat_value is None:
-        return None
+        return None, None
 
     if isinstance(chat_value, str):
         typed = chat_value.strip()
-        return typed or None
+        return typed or None, None
 
     typed = str(getattr(chat_value, "text", "") or "").strip()
     if typed:
-        return typed
+        return typed, None
 
     audio_file = getattr(chat_value, "audio", None)
     if audio_file is None:
-        return None
+        return None, None
 
     audio_bytes = audio_file.getvalue() if hasattr(audio_file, "getvalue") else bytes(audio_file)
+    if not audio_bytes:
+        return None, None
     fingerprint = _audio_fingerprint(audio_bytes)
     if fingerprint == st.session_state.get("last_processed_audio_fingerprint"):
-        return None
-
-    with st.spinner("Transcribing your voice message..."):
-        transcript = transcribe_audio(audio_bytes)
-
-    if not transcript:
-        st.warning("I couldn't hear a clear message. Please try recording again.")
-        st.session_state.last_processed_audio_fingerprint = fingerprint
-        return None
-
-    st.session_state.last_processed_audio_fingerprint = fingerprint
-    return transcript
+        return None, None
+    return None, audio_bytes
 
 
 def _maybe_generate_spoken_reply(conversation_id: str, response_text: str) -> Optional[bytes]:
@@ -372,10 +363,17 @@ def _maybe_generate_spoken_reply(conversation_id: str, response_text: str) -> Op
     return audio_bytes or None
 
 
-def _dispatch_customer_message(user_message: str) -> None:
-    """Send a typed or transcribed message through the existing CSA chat API."""
+def _dispatch_customer_message(
+    user_message: Optional[str],
+    audio_bytes: Optional[bytes] = None,
+) -> None:
+    """Send typed text or recorded audio through the existing chat API."""
+    if not user_message and not audio_bytes:
+        return
+
     if not st.session_state.get("conversation_id"):
-        derived_title = user_message.strip()[:35] + ("..." if len(user_message.strip()) > 35 else "")
+        title_source = user_message or "Voice conversation"
+        derived_title = title_source.strip()[:35] + ("..." if len(title_source.strip()) > 35 else "")
         try:
             created = create_conversation(
                 st.session_state.customer_id,
@@ -394,29 +392,29 @@ def _dispatch_customer_message(user_message: str) -> None:
 
     conversation_id = st.session_state.conversation_id
 
+    try:
+        with st.spinner("AI is thinking..."):
+            response_data = send_message(
+                user_id=st.session_state.customer_id,
+                message=user_message,
+                conversation_id=conversation_id,
+                token=st.session_state.access_token,
+                audio_bytes=audio_bytes,
+            )
+    except ApiClientError as exc:
+        logger.error("Unexpected API error: %s", exc, exc_info=True)
+        st.error(str(exc))
+        return
+
+    if audio_bytes:
+        st.session_state.last_processed_audio_fingerprint = _audio_fingerprint(audio_bytes)
+
+    resolved_user_message = response_data.get("user_message") or user_message or "Voice message"
+    response_text = response_data.get("response", "")
     with st.chat_message("user"):
-        st.markdown(user_message)
+        st.markdown(resolved_user_message)
 
     with st.chat_message("assistant"):
-        response_data = None
-        with st.spinner("AI is thinking..."):
-            try:
-                response_data = send_message(
-                    user_id=st.session_state.customer_id,
-                    message=user_message,
-                    conversation_id=conversation_id,
-                    token=st.session_state.access_token,
-                )
-            except ApiClientError as exc:
-                logger.error("Unexpected API error: %s", exc, exc_info=True)
-                st.error("Sorry, I couldn't process your request right now. Please try again.")
-
-        if not response_data:
-            if response_data is not None:
-                st.error("Sorry, I couldn't process your request right now. Please try again.")
-            return
-
-        response_text = response_data.get("response", "")
         st.markdown(response_text)
         if st.session_state.get("voice_replies_enabled") and response_text:
             with st.spinner("Generating spoken reply..."):
@@ -437,7 +435,7 @@ def _dispatch_customer_message(user_message: str) -> None:
                     rename_conversation(
                         conversation_id,
                         st.session_state.customer_id,
-                        _title_from_first_message(user_message),
+                        _title_from_first_message(resolved_user_message),
                         token=st.session_state.access_token,
                     )
                 except ApiClientError as exc:
@@ -1355,6 +1353,6 @@ chat_value = st.chat_input(
     accept_audio=True,
     audio_sample_rate=16000,
 )
-user_message = _resolve_chat_submission(chat_value)
-if user_message:
-    _dispatch_customer_message(user_message)
+user_message, audio_bytes = _resolve_chat_submission(chat_value)
+if user_message or audio_bytes:
+    _dispatch_customer_message(user_message, audio_bytes)

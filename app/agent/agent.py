@@ -12,6 +12,7 @@ from app.agent.tool_schemas import get_tool_schemas
 from app.memory.context_builder import build_context
 from app.memory.conversation_memory import add_conversation_message, get_or_create_conversation
 from app.memory.memory_processor import add_long_term_memories
+from app.services.voice_service import transcribe_audio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,20 +33,53 @@ class CustomerSupportAgent:
 
     def process_message(
         self,
-        user_message: str,
-        user_id: str,
-        conversation_id: Optional[str] = None
+        user_message: Optional[str] = None,
+        user_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        audio_bytes: Optional[bytes] = None,
     ) -> Dict[str, Any]:
-        """Process a user message through the agent with memory support.
+        """Process text or audio through the agent with memory support.
 
         Args:
-            user_message: The user's message.
+            user_message: The user's text message, when provided.
             user_id: The user ID.
             conversation_id: Optional conversation ID. If not provided, a new one is created.
+            audio_bytes: Recorded audio to transcribe instead of user_message.
 
         Returns:
             Dictionary containing the agent's response and metadata.
         """
+        if not user_id or not user_id.strip():
+            return {
+                "success": False,
+                "error": "A customer ID is required",
+                "response": "I'm sorry, I couldn't identify your customer account. Please sign in again.",
+            }
+        user_id = user_id.strip()
+
+        if audio_bytes is not None:
+            if user_message is not None:
+                return {
+                    "success": False,
+                    "error": "Provide either user_message or audio_bytes, not both",
+                    "response": "Please send either a text message or a voice message.",
+                }
+            user_message = transcribe_audio(audio_bytes)
+            if not user_message:
+                return {
+                    "success": False,
+                    "error": "Audio transcription failed",
+                    "response": "I couldn't hear a clear message. Please try recording again.",
+                }
+        elif not user_message or not user_message.strip():
+            return {
+                "success": False,
+                "error": "A text message or audio recording is required",
+                "response": "Please send a text message or voice recording.",
+            }
+        else:
+            user_message = user_message.strip()
+
         logger.info(f"Processing user message: {user_message[:100]}...")
         # Step 1: Get or create conversation
         conv_result = get_or_create_conversation(user_id, conversation_id)
@@ -119,7 +153,8 @@ class CustomerSupportAgent:
                     "response": final_response,
                     "tool_calls": [],
                     "iterations": iteration,
-                    "conversation_id": active_conversation_id
+                    "conversation_id": active_conversation_id,
+                    "user_message": user_message,
                 }
 
             # Execute tool calls

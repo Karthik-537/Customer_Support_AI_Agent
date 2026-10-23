@@ -1,5 +1,6 @@
 """HTTP client for the FastAPI backend used by the Streamlit frontend."""
 
+import base64
 import logging
 import os
 from typing import Any, Optional
@@ -89,9 +90,19 @@ def get_messages(conversation_id: str, token: Optional[str] = None) -> list[dict
     return result.get("messages", [])
 
 
-def send_message(user_id: Optional[str], message: str, conversation_id: Optional[str] = None, token: Optional[str] = None) -> dict[str, Any]:
-    """Send a user message to the backend agent."""
-    payload: dict[str, Any] = {"message": message}
+def send_message(
+    user_id: Optional[str],
+    message: Optional[str],
+    conversation_id: Optional[str] = None,
+    token: Optional[str] = None,
+    audio_bytes: Optional[bytes] = None,
+) -> dict[str, Any]:
+    """Send a text or voice message to the backend agent."""
+    payload: dict[str, Any] = {}
+    if message is not None:
+        payload["message"] = message
+    if audio_bytes is not None:
+        payload["audio_base64"] = base64.b64encode(audio_bytes).decode("ascii")
     if user_id is not None:
         payload["user_id"] = user_id
     if conversation_id:

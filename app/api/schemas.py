@@ -10,7 +10,8 @@ class ChatRequest(BaseModel):
 
     user_id: Optional[str] = Field(None, description="Deprecated: customer identity is derived from the JWT")
     conversation_id: Optional[str] = Field(None, description="Existing conversation ID for continuing a chat")
-    message: str = Field(..., min_length=1, description="Message sent by the customer")
+    message: Optional[str] = Field(None, min_length=1, description="Text message sent by the customer")
+    audio_base64: Optional[str] = Field(None, description="Base64-encoded voice message")
 
 
 class ChatResponse(BaseModel):
@@ -18,6 +19,7 @@ class ChatResponse(BaseModel):
 
     conversation_id: str
     response: str
+    user_message: str
 
 
 class CustomerSummary(BaseModel):

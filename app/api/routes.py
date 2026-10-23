@@ -1,5 +1,7 @@
 """FastAPI routes for the customer support agent."""
 
+import base64
+import binascii
 import logging
 from typing import Any, Optional
 
@@ -241,7 +243,21 @@ def delete_conversation_by_id(conversation_id: str, user_id: Optional[str] = Que
 @router.post("/chat", response_model=ChatResponse)
 def chat_with_agent(payload: ChatRequest, current_customer: Customer = Depends(get_current_customer)) -> ChatResponse:
     """Send a customer message to the existing agent service using JWT identity."""
-    if not payload.message or not payload.message.strip():
+    if (payload.message is None) == (payload.audio_base64 is None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide exactly one of message or audio_base64",
+        )
+
+    audio_bytes = None
+    if payload.audio_base64 is not None:
+        try:
+            audio_bytes = base64.b64decode(payload.audio_base64, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid audio encoding") from exc
+        if not audio_bytes:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audio recording is empty")
+    elif not payload.message or not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message is required")
 
     customer_id = current_customer.id
@@ -252,18 +268,13 @@ def chat_with_agent(payload: ChatRequest, current_customer: Customer = Depends(g
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
         if existing.get("user_id") != customer_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this conversation")
-    else:
-        created_conversation = create_conversation(customer_id, title="New Conversation")
-        if not created_conversation.get("success"):
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=created_conversation.get("error", "Could not create conversation"))
-        conversation_id = created_conversation["conversation_id"]
-
     agent = get_agent()
     try:
         result = agent.process_message(
             user_message=payload.message,
             user_id=customer_id,
             conversation_id=conversation_id,
+            audio_bytes=audio_bytes,
         )
     except Exception as exc:
         logger.exception("Agent request failed for chat route")
@@ -271,6 +282,12 @@ def chat_with_agent(payload: ChatRequest, current_customer: Customer = Depends(g
 
     if not result.get("success"):
         detail = result.get("response") or result.get("error") or "Could not process request"
+        if result.get("error") == "Audio transcription failed":
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
 
-    return ChatResponse(conversation_id=conversation_id, response=result["response"])
+    return ChatResponse(
+        conversation_id=result["conversation_id"],
+        response=result["response"],
+        user_message=result["user_message"],
+    )
