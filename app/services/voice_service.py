@@ -79,14 +79,16 @@ def transcribe_audio(audio_bytes: bytes) -> str:
 
     try:
         client = get_gemini_client().client
-        response = client.models.generate_content(
+        interaction = client.interactions.create(
             model=model,
-            contents=[types.Part.from_bytes(data=audio_bytes, mime_type=mime_type)],
-            config=types.GenerateContentConfig(
-                audio_transcription_config=types.AudioTranscriptionConfig(
-                    mode=types.AudioTranscriptionConfigMode.SMART,
-                ),
-            ),
+            input=[
+                {
+                    "type": "audio",
+                    "data": base64.b64encode(audio_bytes).decode("ascii"),
+                    "mime_type": mime_type,
+                }
+            ],
+            generation_config={"transcription_config": {"mode": "smart"}},
         )
     except ValueError as exc:
         logger.error("Transcription is unavailable: %s", exc)
@@ -95,7 +97,7 @@ def transcribe_audio(audio_bytes: bytes) -> str:
         logger.error("Gemini transcription failed: %s", exc)
         return ""
 
-    transcript = (getattr(response, "text", None) or "").strip()
+    transcript = (getattr(interaction, "output_text", None) or "").strip()
     if transcript.lower() in _EMPTY_TRANSCRIPT_MARKERS:
         logger.info("Transcription returned no usable speech")
         return ""
